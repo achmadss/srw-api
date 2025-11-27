@@ -83,12 +83,12 @@ The system serves three user roles:
    docker-compose up -d
    ```
 
-   This starts:
-   - PostgreSQL (port 5432)
-   - MinIO (API: 9000, Console: 9001)
-   - RabbitMQ (AMQP: 5672, Management: 15672)
-   - ML Service (Python worker)
-   - SRW API (port 8080)
+    This starts:
+    - PostgreSQL (port 5432)
+    - MinIO (API: 9000, Console: 9001)
+    - RabbitMQ (AMQP: 5672, Management: 15672)
+    - ML Service (Python worker)
+    - SRW API (port 8080)
 
 3. View logs:
    ```bash
@@ -98,6 +98,8 @@ The system serves three user roles:
 
 4. Access services:
    - API: http://localhost:8080
+   - API Health Check: http://localhost:8080/health
+   - API Documentation (Swagger UI): http://localhost:8080/swagger
    - MinIO Console: http://localhost:9001 (minioadmin/minioadmin)
    - RabbitMQ Management: http://localhost:15672 (admin/admin)
 
@@ -356,6 +358,25 @@ All roles have identical auth flow with different login credentials:
 - `PUT /trash/{name}` - Update trash type (ADMIN)
 - `DELETE /trash/{name}` - Delete trash type (ADMIN)
 
+## API Documentation
+
+The API provides comprehensive documentation through multiple channels:
+
+### Swagger UI
+- **URL**: `http://localhost:8080/swagger`
+- **Features**: Interactive API documentation with request/response examples
+- **Authentication**: Use the "Authorize" button with JWT tokens
+
+### OpenAPI Specification
+- **File**: `src/main/resources/openapi/documentation.yaml`
+- **Format**: OpenAPI 3.0.3 compliant
+- **Usage**: Import into tools like Postman, Insomnia, or generate client SDKs
+
+### Health Check
+- **Endpoint**: `GET /health`
+- **Response**: `{"status": "healthy"}`
+- **Purpose**: Service health monitoring and load balancer checks
+
 ## Database Schema
 
 ### Tables
@@ -471,23 +492,33 @@ openssl rand -base64 32
 ### Project Structure
 
 ```
-src/main/kotlin/
-├── module/v1/
-│   ├── model/           # Database entities (Exposed DAO)
-│   ├── repository/      # Data access layer
-│   ├── service/         # Business logic
-│   └── resource/           # API endpoints
-│       ├── auth/        # Authentication routes
-│       ├── client/      # Client management
-│       ├── agent/       # Agent management
-│       ├── submission/  # Submission workflow
-│       └── trash/       # Trash type management
-├── util/                # Utilities (RabbitMQ, MinIO, etc.)
-└── Application.kt       # Main entry point
-
-ml-service/              # Python ML worker
-├── worker.py            # RabbitMQ consumer
-└── config_loader.py     # Trash types config loader
+├── src/main/kotlin/                # Main Kotlin application
+│   ├── Application.kt              # Main entry point
+│   ├── Config.kt                   # Application configuration
+│   ├── Constants.kt                # Environment constants
+│   ├── module/                     
+│   │   ├── model/                  # Database entities (Exposed DAO)
+│   │   ├── repository/             # Data access layer
+│   │   ├── service/                # Business logic layer
+│   │   └── resource/               # API endpoints (Ktor routing)
+│   └── util/                       # Utilities
+├── src/main/resources/             # Application resources
+│   ├── logback.xml                 # Logging configuration
+│   └── openapi/                    # OpenAPI specification
+│       └── documentation.yaml      # API documentation
+├── ml-service/                     # Python ML worker service
+│   ├── worker.py                   # RabbitMQ consumer & ML processing
+│   ├── config_loader.py            # Configuration loader
+│   ├── requirements.txt            # Python dependencies
+│   └── Dockerfile                  # ML service container
+├── docker-compose.yml              # Multi-service orchestration
+├── Dockerfile                      # Main API container
+├── build.gradle.kts                # Kotlin build configuration
+├── settings.gradle.kts             # Gradle settings
+├── gradle.properties               # Gradle properties
+├── trash-types.json                # ML model configuration
+├── .env.example                    # Environment variables template
+└── README.md                       # This file
 ```
 
 ### Adding New Trash Types
@@ -496,19 +527,41 @@ Edit `trash-types.json`:
 
 ```json
 {
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-26T00:00:00Z",
   "trashTypes": [
     {"name": "plastic"},
-    {"name": "metal"}
+    {"name": "metal"},
+    {"name": "glass"},
+    {"name": "paper"},
+    {"name": "organic"}
   ],
   "mlMappings": {
     "plastic_bottle": "plastic",
-    "aluminum_can": "metal"
+    "coca_cola_bottle": "plastic",
+    "pepsi_bottle": "plastic",
+    "water_bottle": "plastic",
+    "soda_bottle": "plastic",
+    "aluminum_can": "metal",
+    "soda_can": "metal",
+    "metal_can": "metal",
+    "tin_can": "metal",
+    "steel_can": "metal",
+    "glass_bottle": "glass",
+    "wine_bottle": "glass",
+    "beer_bottle": "glass",
+    "cardboard": "paper",
+    "newspaper": "paper",
+    "magazine": "paper",
+    "food_waste": "organic",
+    "fruit": "organic",
+    "vegetable": "organic"
   }
 }
 ```
 
-- `trashTypes`: Define recyclable categories
-- `mlMappings`: Map ML model outputs to trash types
+- `trashTypes`: Define recyclable categories with default points per unit (configurable via `DEFAULT_TRASH_POINTS_PER_UNIT`)
+- `mlMappings`: Map ML model outputs to trash types (expand as you discover new model outputs)
 - Restart services to apply changes
 
 ### ML Worker Behavior
@@ -550,52 +603,79 @@ Using Exposed ORM's schema auto-creation:
 4. New token pair issued, old refresh token revoked
 5. Logout → Refresh token revoked in database
 
+### Monitoring and Logging
+
+The application provides comprehensive monitoring capabilities:
+
+#### Health Checks
+- **Endpoint**: `GET /health`
+- **Purpose**: Service availability monitoring
+- **Response**: `{"status": "healthy"}`
+
+#### Docker Health Checks
+- PostgreSQL, MinIO, and RabbitMQ include health checks
+- API service has health check endpoint for load balancers
+- All services restart automatically on failure (unless-stopped policy)
+
+#### Logging
+- **Framework**: Logback with SLF4J
+- **Configuration**: `src/main/resources/logback.xml`
+- **Levels**: INFO (default), DEBUG (development)
+- **Outputs**: Console and file (configurable)
+
+#### Key Monitoring Points
+- Database connection health
+- RabbitMQ message processing
+- MinIO storage operations
+- JWT token validation
+- ML job queue status
+
 ### Testing the Workflow
 
 1. Create client:
    ```bash
-   POST /v1/clients/new
+   POST /clients/new
    {"name": "Test User", "nfc": "TEST001", "address": "123 Test St"}
    ```
 
 2. Login as client:
    ```bash
-   POST /v1/auth/login/client
+   POST /auth/login/client
    {"nfc": "TEST001"}
    ```
 
 3. Upload images (multipart):
    ```bash
-   POST /v1/submissions/new
+   POST /submissions/new
    # Upload 1-3 images
    ```
 
 4. Monitor ML processing:
    ```bash
-   GET /v1/submissions/{id}/ml-status
+   GET /submissions/{id}/ml-status
    ```
 
 5. Admin reviews (login as admin first):
    ```bash
-   POST /v1/submissions/{id}/review
+   POST /submissions/{id}/review
    {"approved": true, "adminNotes": "Good submission"}
    ```
 
 6. Admin assigns agent:
    ```bash
-   POST /v1/submissions/{id}/assign
+   POST /submissions/{id}/assign
    {"agentId": 1}
    ```
 
 7. Agent confirms pickup:
    ```bash
-   POST /v1/submissions/{id}/pickup
+   POST /submissions/{id}/pickup
    {"notes": "Picked up successfully"}
    ```
 
 8. Check client points:
    ```bash
-   GET /v1/clients/TEST001
+   GET /clients/TEST001
    # Response includes totalPoints
    ```
 
