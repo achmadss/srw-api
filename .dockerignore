@@ -1,0 +1,34 @@
+# Git
+.git
+.gitignore
+
+# Build outputs
+build/
+.gradle/
+*.class
+*.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Environment
+.env
+.env.local
+
+# Logs
+*.log
+
+# Documentation
+README.md
+docs/
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# OS
+.DS_Store
+Thumbs.db

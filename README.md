@@ -1,0 +1,611 @@
+# Smart Recycle Waste (SRW) API
+
+A waste management system that leverages machine learning to classify trash types and reward users for recycling. Built with Ktor, the system handles image submissions, ML-based trash classification, admin review, and agent pickup coordination.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Technology Stack](#technology-stack)
+- [System Architecture](#system-architecture)
+- [Quick Start](#quick-start)
+- [Submission Workflow](#submission-workflow)
+- [API Endpoints](#api-endpoints)
+- [Database Schema](#database-schema)
+- [Environment Configuration](#environment-configuration)
+- [Development Guide](#development-guide)
+
+## Overview
+
+The SRW system enables clients to:
+1. Upload images of recyclable waste via NFC authentication
+2. Receive ML-powered trash classification
+3. Earn points based on trash type and quantity
+4. Coordinate pickup with assigned agents
+
+The system serves three user roles:
+- **Clients**: Upload waste images and track points
+- **Admins**: Review submissions, assign agents, manage system
+- **Agents**: View assigned pickups and confirm collection
+
+## Technology Stack
+
+- **Framework**: Ktor 3.3.2
+- **Language**: Kotlin 2.2.20
+- **Database**: PostgreSQL 16
+- **ORM**: Exposed 1.0.0-rc-3
+- **Object Storage**: MinIO
+- **Message Queue**: RabbitMQ 3
+- **DI**: Koin 4.1.1
+- **Authentication**: JWT (separate secrets per role)
+- **ML Service**: Python 3 worker with simulated processing
+
+## System Architecture
+
+```
+┌─────────────┐      ┌─────────────┐      ┌──────────────┐
+│   Client    │──────│  SRW API    │──────│  PostgreSQL  │
+│   (NFC)     │      │  (Ktor)     │      │              │
+└─────────────┘      └─────────────┘      └──────────────┘
+                            │
+                     ┌──────┴──────┐
+                     │             │
+              ┌──────▼─────┐ ┌────▼─────┐
+              │   MinIO    │ │ RabbitMQ │
+              │  Storage   │ │  Broker  │
+              └────────────┘ └────┬─────┘
+                                  │
+                            ┌─────▼──────┐
+                            │ ML Service │
+                            │  (Python)  │
+                            └────────────┘
+```
+
+**ML Processing Flow**:
+1. Client uploads images → Stored in MinIO
+2. API publishes ML job to RabbitMQ queue
+3. ML worker processes images (2-5s per image, 10% failure rate for testing)
+4. ML worker publishes results to results queue
+5. API consumes results and creates metadata records
+6. Submission moves to AWAITING_REVIEW status
+
+## Quick Start
+
+### Using Docker Compose (Recommended)
+
+1. Copy and configure environment:
+   ```bash
+   cp .env.example .env
+   # Edit .env if needed (defaults work for development)
+   ```
+
+2. Start all services:
+   ```bash
+   docker-compose up -d
+   ```
+
+   This starts:
+   - PostgreSQL (port 5432)
+   - MinIO (API: 9000, Console: 9001)
+   - RabbitMQ (AMQP: 5672, Management: 15672)
+   - ML Service (Python worker)
+   - SRW API (port 8080)
+
+3. View logs:
+   ```bash
+   docker-compose logs -f api      # API logs
+   docker-compose logs -f ml-service  # ML worker logs
+   ```
+
+4. Access services:
+   - API: http://localhost:8080
+   - MinIO Console: http://localhost:9001 (minioadmin/minioadmin)
+   - RabbitMQ Management: http://localhost:15672 (admin/admin)
+
+5. Stop services:
+   ```bash
+   docker-compose down
+   ```
+
+### Using Gradle (Local Development)
+
+Requires PostgreSQL, MinIO, and RabbitMQ running locally or via Docker:
+
+```bash
+# Start only infrastructure services
+docker-compose up -d postgres minio rabbitmq ml-service
+
+# Run API locally
+./gradlew run
+```
+
+**Available Gradle tasks**:
+- `./gradlew test` - Run tests
+- `./gradlew build` - Build project
+- `./gradlew buildFatJar` - Build executable JAR
+- `./gradlew run` - Run server
+
+## Submission Workflow
+
+```
+┌────────────┐
+│  PENDING   │ ← Client uploads images
+└─────┬──────┘
+      │
+      ▼
+┌────────────────┐
+│ ML_PROCESSING  │ ← ML worker processes images
+└────────┬───────┘
+         │
+         ▼
+┌─────────────────┐
+│ AWAITING_REVIEW │ ← Admin reviews results
+└────────┬────────┘
+         │
+    ┌────┴────┐
+    │         │
+    ▼         ▼
+┌──────┐  ┌──────────┐
+│REJECT│  │ APPROVED │
+└──────┘  └────┬─────┘
+               │
+               ▼
+         ┌──────────┐
+         │ ASSIGNED │ ← Admin assigns agent
+         └────┬─────┘
+              │
+              ▼
+        ┌───────────┐
+        │ PICKED_UP │ ← Agent confirms pickup
+        └─────┬─────┘
+              │
+              ▼
+        ┌───────────┐
+        │ COMPLETED │
+        └───────────┘
+```
+
+**Status Descriptions**:
+- `PENDING` - Images uploaded, awaiting ML processing
+- `ML_PROCESSING` - ML worker processing images
+- `AWAITING_REVIEW` - ML complete, awaiting admin review
+- `APPROVED` - Admin approved submission
+- `REJECTED` - Admin rejected (terminal state)
+- `ASSIGNED` - Agent assigned for pickup
+- `PICKED_UP` - Agent confirmed pickup
+- `COMPLETED` - Workflow complete (terminal state)
+
+## API Endpoints
+
+Base URL: `http://localhost:8080/v1`
+
+### Authentication
+
+All roles have identical auth flow with different login credentials:
+
+**Admin**
+- `POST /auth/login/admin` - Login with username/password
+  ```json
+  {"username": "admin", "password": "admin"}
+  ```
+
+**Agent**
+- `POST /auth/login/agent` - Login with username/password
+  ```json
+  {"username": "agent1", "password": "password"}
+  ```
+
+**Client**
+- `POST /auth/login/client` - Login with NFC card
+  ```json
+  {"nfc": "NFC123456"}
+  ```
+
+**Common Auth Endpoints**
+- `POST /auth/refresh` - Refresh access token
+  ```json
+  {"refreshToken": "..."}
+  ```
+- `POST /auth/logout` - Revoke refresh token
+  ```json
+  {"refreshToken": "..."}
+  ```
+
+**Token Details**:
+- Access tokens: 15 minutes expiry
+- Refresh tokens: 30 days expiry, stored in DB
+
+### Submissions
+
+#### Client Endpoints
+
+- `POST /submissions/new` - Create submission with images (multipart/form-data)
+  - Auth: CLIENT
+  - Body: Multipart with file uploads (field name: any)
+  - Response: Submission created, ML job queued
+
+- `GET /submissions?status={status}` - List own submissions
+  - Auth: CLIENT
+  - Query: `status` (optional) - Filter by status
+  - Response: List of submissions
+
+- `GET /submissions/{id}` - Get submission details
+  - Auth: CLIENT
+  - Authorization: Own submissions only
+  - Response: Submission with images and metadata
+
+- `GET /submissions/{id}/ml-status` - Get ML processing status
+  - Auth: CLIENT
+  - Authorization: Own submissions only
+  - Response: Per-image ML status (PENDING/PROCESSING/COMPLETED/FAILED)
+
+#### Admin Endpoints
+
+- `GET /submissions?page={page}&pageSize={size}&status={status}` - List all submissions
+  - Auth: ADMIN
+  - Query: `page` (default: 1), `pageSize` (default: 20), `status` (optional)
+  - Response: Paginated submissions
+
+- `GET /submissions/{id}` - Get submission details
+  - Auth: ADMIN
+  - Response: Full submission details with images and metadata
+
+- `POST /submissions/{id}/review` - Review submission
+  - Auth: ADMIN
+  - Body:
+    ```json
+    {
+      "approved": true,
+      "rejectionReason": null,
+      "adminNotes": "Looks good"
+    }
+    ```
+
+- `POST /submissions/{id}/assign` - Assign agent
+  - Auth: ADMIN
+  - Body:
+    ```json
+    {
+      "agentId": 1
+    }
+    ```
+  - Note: Pickup location automatically set to client's address
+
+- `GET /submissions/{id}/history` - Get status change history
+  - Auth: ADMIN
+  - Response: Audit trail of all status transitions
+
+- `GET /submissions/{id}/ml-status` - Get ML processing status
+  - Auth: ADMIN
+  - Response: Per-image ML status
+
+- `POST /submissions/{id}/images/{imageId}/metadata` - Manually add metadata
+  - Auth: ADMIN
+  - Use case: ML processing failed, manual classification needed
+  - Body:
+    ```json
+    {
+      "metadata": [
+        {"trashType": "plastic", "amount": 5},
+        {"trashType": "metal", "amount": 2}
+      ]
+    }
+    ```
+
+#### Agent Endpoints
+
+- `GET /submissions?status={status}` - List assigned submissions
+  - Auth: AGENT
+  - Query: `status` (optional)
+  - Response: Submissions assigned to this agent
+
+- `GET /submissions/{id}` - Get submission details
+  - Auth: AGENT
+  - Authorization: Assigned submissions only
+  - Response: Submission details
+
+- `POST /submissions/{id}/pickup` - Confirm pickup
+  - Auth: AGENT
+  - Body:
+    ```json
+    {
+      "notes": "Picked up at 10:00 AM"
+    }
+    ```
+
+### Clients
+
+- `GET /clients?page={page}&pageSize={size}` - List clients (ADMIN)
+- `POST /clients/new` - Create client (ADMIN)
+  ```json
+  {
+    "name": "John Doe",
+    "nfc": "NFC123456",
+    "address": "123 Main St"
+  }
+  ```
+- `GET /clients/{nfc}` - Get client by NFC (ADMIN, CLIENT)
+  - Response includes `totalPoints` field
+
+### Agents
+
+- `GET /agents?page={page}&pageSize={size}` - List agents (ADMIN)
+- `POST /agents/new` - Create agent (ADMIN)
+  ```json
+  {
+    "name": "Agent Smith",
+    "username": "agent1",
+    "password": "password123"
+  }
+  ```
+- `GET /agents/{id}` - Get agent (ADMIN)
+- `PUT /agents/{id}` - Update agent (ADMIN)
+- `DELETE /agents/{id}` - Delete agent (ADMIN)
+
+### Trash Types
+
+- `GET /trash` - List all trash types (PUBLIC)
+  - Response includes trash types and points per unit
+- `GET /trash/{name}` - Get trash type by name (PUBLIC)
+- `POST /trash/new` - Create trash type (ADMIN)
+  ```json
+  {
+    "name": "plastic",
+    "pointsPerUnit": 10
+  }
+  ```
+- `PUT /trash/{name}` - Update trash type (ADMIN)
+- `DELETE /trash/{name}` - Delete trash type (ADMIN)
+
+## Database Schema
+
+### Tables
+
+**admins**
+- id, username, password (hashed), createdAt, updatedAt
+
+**agents**
+- id, name, username, password (hashed), createdAt, updatedAt
+
+**clients**
+- nfc (PK), name, address, createdAt, updatedAt
+
+**submissions**
+- id, clientId (FK), agentId (FK, nullable), status
+- rejectionReason, adminNotes, pickupLocation, totalPoints
+- createdAt, updatedAt, processedAt, reviewedAt, assignedAt, pickedUpAt
+
+**images**
+- id (UUID string), url, submissionId (FK)
+- mlStatus, mlError
+- createdAt, updatedAt
+
+**metadata**
+- id, amount, imageId (FK), trashName (FK)
+- createdAt, updatedAt
+
+**trash**
+- name (PK), pointsPerUnit, createdAt, updatedAt
+
+**points**
+- id, clientNfc (FK), submissionId (FK)
+- points, description, createdAt
+
+**submission_history**
+- id, submissionId (FK), status, notes, timestamp
+
+**refresh_tokens**
+- id, token (unique), userId, userType
+- expiresAt, createdAt
+
+### Relationships
+
+```
+Client 1──▶ N Submission
+Agent 1──▶ N Submission (nullable)
+Submission 1──▶ N Image
+Submission 1──▶ N Point
+Submission 1──▶ N SubmissionHistory
+Image 1──▶ N Metadata
+Trash 1──▶ N Metadata
+```
+
+## Environment Configuration
+
+### Required Environment Variables
+
+The application requires these environment variables to start (see `Constants.kt:64-81`):
+
+**Database** (3 variables)
+- `DB_URL` - Database connection URL (e.g., `jdbc:postgresql://localhost:5432/srw_db`)
+- `DB_USER` - Database username
+- `DB_PASSWORD` - Database password
+
+**JWT Configuration** (7 variables)
+- `JWT_ISSUER` - Token issuer URL
+- `ADMIN_JWT_AUDIENCE` - Admin token audience
+- `CLIENT_JWT_AUDIENCE` - Client token audience
+- `AGENT_JWT_AUDIENCE` - Agent token audience
+- `ADMIN_JWT_SECRET` - Admin signing secret (**change in production!**)
+- `CLIENT_JWT_SECRET` - Client signing secret (**change in production!**)
+- `AGENT_JWT_SECRET` - Agent signing secret (**change in production!**)
+
+**MinIO Object Storage** (4 variables)
+- `MINIO_ENDPOINT` - MinIO server URL
+- `MINIO_ACCESS_KEY` - MinIO username
+- `MINIO_SECRET_KEY` - MinIO password
+- `MINIO_BUCKET` - Bucket name for images
+
+**RabbitMQ** (1 variable)
+- `RABBITMQ_URL` - Message broker URL (e.g., `amqp://admin:admin@localhost:5672`)
+
+### Optional Environment Variables
+
+These have defaults if not set:
+
+- `DEFAULT_ADMIN_USERNAME` - Default admin username (default: `admin`)
+- `DEFAULT_ADMIN_PASSWORD` - Default admin password (default: random 16-char, logged on first run)
+- `TRASH_TYPES_CONFIG_PATH` - Path to trash types config (default: `trash-types.json`)
+- `DEFAULT_TRASH_POINTS_PER_UNIT` - Default points per unit (default: `10`)
+
+### Setup
+
+**For Docker Compose**: All required variables are already configured in `docker-compose.yml` with sensible defaults. Just run:
+```bash
+docker-compose up -d
+```
+
+**For Local Development**: Copy and configure `.env`:
+```bash
+cp .env.example .env
+# Edit .env with your local settings (use localhost for services)
+./gradlew run
+```
+
+**Security Warning**: Change JWT secrets in production! Generate with:
+```bash
+openssl rand -base64 32
+```
+
+## Development Guide
+
+### Project Structure
+
+```
+src/main/kotlin/
+├── module/v1/
+│   ├── model/           # Database entities (Exposed DAO)
+│   ├── repository/      # Data access layer
+│   ├── service/         # Business logic
+│   └── resource/           # API endpoints
+│       ├── auth/        # Authentication routes
+│       ├── client/      # Client management
+│       ├── agent/       # Agent management
+│       ├── submission/  # Submission workflow
+│       └── trash/       # Trash type management
+├── util/                # Utilities (RabbitMQ, MinIO, etc.)
+└── Application.kt       # Main entry point
+
+ml-service/              # Python ML worker
+├── worker.py            # RabbitMQ consumer
+└── config_loader.py     # Trash types config loader
+```
+
+### Adding New Trash Types
+
+Edit `trash-types.json`:
+
+```json
+{
+  "trashTypes": [
+    {"name": "plastic"},
+    {"name": "metal"}
+  ],
+  "mlMappings": {
+    "plastic_bottle": "plastic",
+    "aluminum_can": "metal"
+  }
+}
+```
+
+- `trashTypes`: Define recyclable categories
+- `mlMappings`: Map ML model outputs to trash types
+- Restart services to apply changes
+
+### ML Worker Behavior
+
+Current implementation (`ml-service/worker.py`):
+- Simulates ML processing (2-5 seconds per image)
+- 10% random failure rate for testing
+- Generates 1-3 random trash types per image
+- Maps outputs using `trash-types.json`
+
+To implement real ML:
+1. Replace `process_image()` function
+2. Integrate actual ML model (TensorFlow, PyTorch, etc.)
+3. Update `mlMappings` in config as you discover model outputs
+
+### Points Calculation
+
+Formula: `totalPoints = Σ(metadata.amount × trash.pointsPerUnit)`
+
+Example:
+- Image has 5 plastic bottles (10 pts/unit) = 50 points
+- Image has 2 metal cans (15 pts/unit) = 30 points
+- Total: 80 points awarded to client
+
+### Schema Management
+
+Using Exposed ORM's schema auto-creation:
+- No migration files needed
+- Schema created on application start
+- Tables registered in `Config.kt`
+
+**Warning**: Not recommended for production. Use migration tools (Flyway/Liquibase) for production deployments.
+
+### Authentication Flow
+
+1. User logs in → Receive access token (15 min) + refresh token (30 days)
+2. Use access token for API requests (header: `Authorization: Bearer {token}`)
+3. Token expired → Call `/auth/refresh` with refresh token
+4. New token pair issued, old refresh token revoked
+5. Logout → Refresh token revoked in database
+
+### Testing the Workflow
+
+1. Create client:
+   ```bash
+   POST /v1/clients/new
+   {"name": "Test User", "nfc": "TEST001", "address": "123 Test St"}
+   ```
+
+2. Login as client:
+   ```bash
+   POST /v1/auth/login/client
+   {"nfc": "TEST001"}
+   ```
+
+3. Upload images (multipart):
+   ```bash
+   POST /v1/submissions/new
+   # Upload 1-3 images
+   ```
+
+4. Monitor ML processing:
+   ```bash
+   GET /v1/submissions/{id}/ml-status
+   ```
+
+5. Admin reviews (login as admin first):
+   ```bash
+   POST /v1/submissions/{id}/review
+   {"approved": true, "adminNotes": "Good submission"}
+   ```
+
+6. Admin assigns agent:
+   ```bash
+   POST /v1/submissions/{id}/assign
+   {"agentId": 1}
+   ```
+
+7. Agent confirms pickup:
+   ```bash
+   POST /v1/submissions/{id}/pickup
+   {"notes": "Picked up successfully"}
+   ```
+
+8. Check client points:
+   ```bash
+   GET /v1/clients/TEST001
+   # Response includes totalPoints
+   ```
+
+## Resources
+
+- [Ktor Documentation](https://ktor.io/docs/home.html)
+- [Exposed ORM Guide](https://github.com/JetBrains/Exposed/wiki)
+- [MinIO Documentation](https://min.io/docs/minio/linux/index.html)
+- [RabbitMQ Tutorials](https://www.rabbitmq.com/tutorials)
+
+## License
+
+Proprietary - All rights reserved

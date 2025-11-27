@@ -1,0 +1,32 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-26T00:00:00Z",
+  "trashTypes": [
+    {"name": "plastic"},
+    {"name": "metal"},
+    {"name": "glass"},
+    {"name": "paper"},
+    {"name": "organic"}
+  ],
+  "mlMappings": {
+    "plastic_bottle": "plastic",
+    "coca_cola_bottle": "plastic",
+    "pepsi_bottle": "plastic",
+    "water_bottle": "plastic",
+    "soda_bottle": "plastic",
+    "aluminum_can": "metal",
+    "soda_can": "metal",
+    "metal_can": "metal",
+    "tin_can": "metal",
+    "steel_can": "metal",
+    "glass_bottle": "glass",
+    "wine_bottle": "glass",
+    "beer_bottle": "glass",
+    "cardboard": "paper",
+    "newspaper": "paper",
+    "magazine": "paper",
+    "food_waste": "organic",
+    "fruit": "organic",
+    "vegetable": "organic"
+  }
+}

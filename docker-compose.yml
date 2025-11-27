@@ -1,0 +1,158 @@
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: srw-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-srw_db}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - srw-network
+
+  minio:
+    image: minio/minio:latest
+    container_name: srw-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - srw-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: srw-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-admin}
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"       # AMQP port
+      - "${RABBITMQ_MGMT_PORT:-15672}:15672" # Management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - srw-network
+
+  ml-service:
+    build: ./ml-service
+    container_name: srw-ml-service
+    restart: unless-stopped
+    environment:
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672
+      POSTGRES_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-srw_db}
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      TRASH_TYPES_CONFIG_PATH: /config/trash-types.json
+    volumes:
+      - ./trash-types.json:/config/trash-types.json:ro
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - srw-network
+    # Uncomment for scaling: docker-compose up --scale ml-service=3
+    # scale: 3
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: srw-api
+    restart: unless-stopped
+    ports:
+      - "${API_PORT:-8080}:8080"
+    environment:
+      # Database Configuration
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-srw_db}
+      DB_USER: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-password}
+
+      # JWT Configuration
+      JWT_ISSUER: ${JWT_ISSUER:-http://0.0.0.0:8080/}
+      ADMIN_JWT_AUDIENCE: ${ADMIN_JWT_AUDIENCE:-http://0.0.0.0:8080/v1/admin}
+      CLIENT_JWT_AUDIENCE: ${CLIENT_JWT_AUDIENCE:-http://0.0.0.0:8080/v1/client}
+      AGENT_JWT_AUDIENCE: ${AGENT_JWT_AUDIENCE:-http://0.0.0.0:8080/v1/agent}
+
+      # JWT Secrets (IMPORTANT: Use strong, unique secrets in production!)
+      ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET:-change-this-admin-secret-in-production}
+      CLIENT_JWT_SECRET: ${CLIENT_JWT_SECRET:-change-this-client-secret-in-production}
+      AGENT_JWT_SECRET: ${AGENT_JWT_SECRET:-change-this-agent-secret-in-production}
+
+      # MinIO Object Storage Configuration
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT:-http://minio:9000}
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      MINIO_BUCKET: ${MINIO_BUCKET:-srw-images}
+
+      # RabbitMQ Configuration
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://admin:admin@rabbitmq:5672}
+
+      # Optional - Default Admin Credentials (for first-time setup)
+      DEFAULT_ADMIN_USERNAME: ${DEFAULT_ADMIN_USERNAME:-admin}
+      DEFAULT_ADMIN_PASSWORD: ${DEFAULT_ADMIN_PASSWORD:-admin}
+
+      # Trash Types Configuration
+      TRASH_TYPES_CONFIG_PATH: /config/trash-types.json
+      DEFAULT_TRASH_POINTS_PER_UNIT: ${DEFAULT_TRASH_POINTS_PER_UNIT:-10}
+    volumes:
+      - ./trash-types.json:/config/trash-types.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - srw-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  postgres_data:
+    driver: local
+  minio_data:
+    driver: local
+  rabbitmq_data:
+    driver: local
+
+networks:
+  srw-network:
+    driver: bridge
