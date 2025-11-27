@@ -6,7 +6,7 @@ import io.ktor.server.request.receive
 import io.ktor.server.resources.post
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
-import module.v1.service.AuthService
+import module.service.AuthService
 import kotlin.getValue
 
 @Resource("/auth")

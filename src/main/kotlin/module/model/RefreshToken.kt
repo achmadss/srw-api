@@ -19,12 +19,12 @@ object RefreshTokenTable : IntIdTable("refresh_tokens") {
 
 @OptIn(ExperimentalTime::class)
 class RefreshToken(id: EntityID<Int>) : IntEntity(id) {
-    companion object : IntEntityClass<RefreshToken>(_root_ide_package_.module.model.RefreshTokenTable)
+    companion object : IntEntityClass<RefreshToken>(RefreshTokenTable)
 
-    var token by _root_ide_package_.module.model.RefreshTokenTable.token
-    var userId by _root_ide_package_.module.model.RefreshTokenTable.userId
-    var userType by _root_ide_package_.module.model.RefreshTokenTable.userType
-    var expiresAt by _root_ide_package_.module.model.RefreshTokenTable.expiresAt
-    var isRevoked by _root_ide_package_.module.model.RefreshTokenTable.isRevoked
-    var createdAt by _root_ide_package_.module.model.RefreshTokenTable.createdAt
+    var token by RefreshTokenTable.token
+    var userId by RefreshTokenTable.userId
+    var userType by RefreshTokenTable.userType
+    var expiresAt by RefreshTokenTable.expiresAt
+    var isRevoked by RefreshTokenTable.isRevoked
+    var createdAt by RefreshTokenTable.createdAt
 }

@@ -1,8 +1,8 @@
 package module.repository
 
-import module.v1.model.Image
-import module.v1.model.MLStatus
-import module.v1.model.Submission
+import module.model.Image
+import module.model.MLStatus
+import module.model.Submission
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 

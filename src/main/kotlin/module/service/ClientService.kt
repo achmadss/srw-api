@@ -1,12 +1,12 @@
 package module.service
 
 import io.ktor.http.HttpStatusCode
-import module.v1.model.toResponse
+import module.model.toResponse
 import resource.client.ClientResponse
-import module.v1.model.response.BaseResponse
-import module.v1.model.response.PaginatedResponse
-import module.v1.repository.ClientRepository
-import module.v1.repository.PointRepository
+import module.model.response.BaseResponse
+import module.model.response.PaginatedResponse
+import module.repository.ClientRepository
+import module.repository.PointRepository
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 class ClientService(

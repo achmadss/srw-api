@@ -15,7 +15,7 @@ import resource.submission.SubmissionHistoryResponse
  */
 @OptIn(ExperimentalTime::class)
 object SubmissionHistoryTable : IntIdTable("submission_history") {
-    val submission = reference("submission_id", _root_ide_package_.module.model.SubmissionTable, onDelete = ReferenceOption.CASCADE)
+    val submission = reference("submission_id", SubmissionTable, onDelete = ReferenceOption.CASCADE)
     val oldStatus = varchar("old_status", 50)
     val newStatus = varchar("new_status", 50)
     val changedBy = integer("changed_by") // User ID (admin, client, or agent)
@@ -29,22 +29,22 @@ object SubmissionHistoryTable : IntIdTable("submission_history") {
  */
 @OptIn(ExperimentalTime::class)
 class SubmissionHistory(id: EntityID<Int>) : IntEntity(id) {
-    companion object : IntEntityClass<SubmissionHistory>(_root_ide_package_.module.model.SubmissionHistoryTable)
+    companion object : IntEntityClass<SubmissionHistory>(SubmissionHistoryTable)
 
-    var submission by _root_ide_package_.module.model.Submission referencedOn _root_ide_package_.module.model.SubmissionHistoryTable.submission
-    var oldStatus by _root_ide_package_.module.model.SubmissionHistoryTable.oldStatus
-    var newStatus by _root_ide_package_.module.model.SubmissionHistoryTable.newStatus
-    var changedBy by _root_ide_package_.module.model.SubmissionHistoryTable.changedBy
-    var userType by _root_ide_package_.module.model.SubmissionHistoryTable.userType
-    var comment by _root_ide_package_.module.model.SubmissionHistoryTable.comment
-    var createdAt by _root_ide_package_.module.model.SubmissionHistoryTable.createdAt
+    var submission by Submission referencedOn SubmissionHistoryTable.submission
+    var oldStatus by SubmissionHistoryTable.oldStatus
+    var newStatus by SubmissionHistoryTable.newStatus
+    var changedBy by SubmissionHistoryTable.changedBy
+    var userType by SubmissionHistoryTable.userType
+    var comment by SubmissionHistoryTable.comment
+    var createdAt by SubmissionHistoryTable.createdAt
 }
 
 /**
  * Extension function to convert SubmissionHistory entity to SubmissionHistoryResponse
  */
 @OptIn(ExperimentalTime::class)
-fun module.model.SubmissionHistory.toResponse(): SubmissionHistoryResponse {
+fun SubmissionHistory.toResponse(): SubmissionHistoryResponse {
     return transaction {
         SubmissionHistoryResponse(
             id = this@toResponse.id.value,

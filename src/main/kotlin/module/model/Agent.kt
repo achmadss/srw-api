@@ -20,13 +20,13 @@ object AgentTable : IntIdTable("agents") {
 
 @OptIn(ExperimentalTime::class)
 class Agent(id: EntityID<Int>): IntEntity(id) {
-    companion object: IntEntityClass<Agent>(_root_ide_package_.module.model.AgentTable)
-    var name by _root_ide_package_.module.model.AgentTable.name
-    var username by _root_ide_package_.module.model.AgentTable.username
-    var password by _root_ide_package_.module.model.AgentTable.password
-    var createdAt by _root_ide_package_.module.model.AgentTable.createdAt
-    var updatedAt by _root_ide_package_.module.model.AgentTable.updatedAt
-    val submissions by _root_ide_package_.module.model.Submission.Companion optionalReferrersOn _root_ide_package_.module.model.SubmissionTable.agent
+    companion object: IntEntityClass<Agent>(AgentTable)
+    var name by AgentTable.name
+    var username by AgentTable.username
+    var password by AgentTable.password
+    var createdAt by AgentTable.createdAt
+    var updatedAt by AgentTable.updatedAt
+    val submissions by Submission.Companion optionalReferrersOn SubmissionTable.agent
 }
 
 /**

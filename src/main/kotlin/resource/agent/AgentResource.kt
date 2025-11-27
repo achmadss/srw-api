@@ -11,9 +11,9 @@ import io.ktor.server.resources.post
 import io.ktor.server.resources.put
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
-import module.v1.service.AgentService
-import module.v1.service.CreateAgentRequest
-import module.v1.service.UpdateAgentRequest
+import module.service.AgentService
+import module.service.CreateAgentRequest
+import module.service.UpdateAgentRequest
 
 /**
  * Type-safe agent resources

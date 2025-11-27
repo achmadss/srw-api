@@ -1,7 +1,7 @@
 package module.repository
 
-import module.v1.model.Client
-import module.v1.model.ClientTable
+import module.model.Client
+import module.model.ClientTable
 import org.jetbrains.exposed.v1.core.eq
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime

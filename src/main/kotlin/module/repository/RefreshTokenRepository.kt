@@ -1,7 +1,7 @@
 package module.repository
 
-import module.v1.model.RefreshToken
-import module.v1.model.RefreshTokenTable
+import module.model.RefreshToken
+import module.model.RefreshTokenTable
 import org.jetbrains.exposed.v1.core.and
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime

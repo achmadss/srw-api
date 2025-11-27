@@ -20,15 +20,15 @@ object ClientTable : IntIdTable("clients") {
 
 @OptIn(ExperimentalTime::class)
 class Client(id: EntityID<Int>): IntEntity(id) {
-    companion object: IntEntityClass<Client>(_root_ide_package_.module.model.ClientTable)
-    var name by _root_ide_package_.module.model.ClientTable.name
-    var nfc by _root_ide_package_.module.model.ClientTable.nfc
-    var address by _root_ide_package_.module.model.ClientTable.address
-    var createdAt by _root_ide_package_.module.model.ClientTable.createdAt
-    var updatedAt by _root_ide_package_.module.model.ClientTable.updatedAt
+    companion object: IntEntityClass<Client>(ClientTable)
+    var name by ClientTable.name
+    var nfc by ClientTable.nfc
+    var address by ClientTable.address
+    var createdAt by ClientTable.createdAt
+    var updatedAt by ClientTable.updatedAt
 
-    val submissions by _root_ide_package_.module.model.Submission.Companion referrersOn _root_ide_package_.module.model.SubmissionTable.client
-    val points by _root_ide_package_.module.model.Point.Companion referrersOn _root_ide_package_.module.model.PointTable.client
+    val submissions by Submission.Companion referrersOn SubmissionTable.client
+    val points by Point.Companion referrersOn PointTable.client
 }
 
 /**

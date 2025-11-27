@@ -17,10 +17,10 @@ object AdminTable : IntIdTable("admins") {
 
 @OptIn(ExperimentalTime::class)
 class Admin(id: EntityID<Int>) : IntEntity(id) {
-    companion object : IntEntityClass<Admin>(_root_ide_package_.module.model.AdminTable)
+    companion object : IntEntityClass<Admin>(AdminTable)
 
-    var username by _root_ide_package_.module.model.AdminTable.username
-    var password by _root_ide_package_.module.model.AdminTable.password
-    var createdAt by _root_ide_package_.module.model.AdminTable.createdAt
-    var updatedAt by _root_ide_package_.module.model.AdminTable.updatedAt
+    var username by AdminTable.username
+    var password by AdminTable.password
+    var createdAt by AdminTable.createdAt
+    var updatedAt by AdminTable.updatedAt
 }

@@ -3,12 +3,12 @@ package module.service
 import UserType
 import getRequiredEnv
 import io.ktor.http.HttpStatusCode
-import module.v1.model.response.BaseResponse
+import module.model.response.BaseResponse
 import resource.auth.TokenPair
-import module.v1.repository.AdminRepository
-import module.v1.repository.AgentRepository
-import module.v1.repository.ClientRepository
-import module.v1.repository.RefreshTokenRepository
+import module.repository.AdminRepository
+import module.repository.AgentRepository
+import module.repository.ClientRepository
+import module.repository.RefreshTokenRepository
 import util.JwtUtil
 import util.PasswordUtil
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction

@@ -1,6 +1,6 @@
 package module.repository
 
-import module.v1.model.*
+import module.model.*
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq

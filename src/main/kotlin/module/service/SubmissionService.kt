@@ -1,10 +1,10 @@
 package module.service
 
 import io.ktor.http.HttpStatusCode
-import module.v1.model.*
-import module.v1.model.response.BaseResponse
-import module.v1.model.response.PaginatedResponse
-import module.v1.repository.*
+import module.model.*
+import module.model.response.BaseResponse
+import module.model.response.PaginatedResponse
+import module.repository.*
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import resource.submission.MLStatusResponse
 import resource.submission.ManualMetadataItem

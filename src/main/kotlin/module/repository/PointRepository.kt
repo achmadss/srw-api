@@ -1,8 +1,8 @@
 package module.repository
 
-import module.v1.model.Client
-import module.v1.model.Point
-import module.v1.model.Submission
+import module.model.Client
+import module.model.Point
+import module.model.Submission
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 

@@ -1,9 +1,9 @@
 package module.repository
 
-import module.v1.model.Submission
-import module.v1.model.SubmissionHistory
-import module.v1.model.SubmissionHistoryTable
-import module.v1.model.SubmissionStatus
+import module.model.Submission
+import module.model.SubmissionHistory
+import module.model.SubmissionHistoryTable
+import module.model.SubmissionStatus
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq

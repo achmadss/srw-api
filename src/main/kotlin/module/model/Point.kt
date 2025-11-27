@@ -10,17 +10,17 @@ import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
 object PointTable : IntIdTable("points") {
-    val client = reference("client_id", _root_ide_package_.module.model.ClientTable)
-    val submission = reference("submission_id", _root_ide_package_.module.model.SubmissionTable, onDelete = ReferenceOption.SET_NULL).nullable() // null for manual adjustments
+    val client = reference("client_id", ClientTable)
+    val submission = reference("submission_id", SubmissionTable, onDelete = ReferenceOption.SET_NULL).nullable() // null for manual adjustments
     val amount = integer("amount") // + for add, - for deduction
     val createdAt = timestamp("created_at")
 }
 
 @OptIn(ExperimentalTime::class)
 class Point(id: EntityID<Int>) : IntEntity(id) {
-    companion object : IntEntityClass<Point>(_root_ide_package_.module.model.PointTable)
-    var client by _root_ide_package_.module.model.Client referencedOn _root_ide_package_.module.model.PointTable.client
-    var submission by _root_ide_package_.module.model.Submission.Companion optionalReferencedOn _root_ide_package_.module.model.PointTable.submission
-    var amount by _root_ide_package_.module.model.PointTable.amount
-    var createdAt by _root_ide_package_.module.model.PointTable.createdAt
+    companion object : IntEntityClass<Point>(PointTable)
+    var client by Client referencedOn PointTable.client
+    var submission by Submission.Companion optionalReferencedOn PointTable.submission
+    var amount by PointTable.amount
+    var createdAt by PointTable.createdAt
 }

@@ -1,8 +1,7 @@
 package module.service
 
-import module.v1.service.MinIOStorageService
-import module.v1.model.Image
-import module.v1.repository.ImageRepository
+import module.model.Image
+import module.repository.ImageRepository
 import java.io.InputStream
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 

@@ -1,10 +1,10 @@
 package module.repository
 
-import module.v1.model.Image
-import module.v1.model.Metadata
-import module.v1.model.Trash
+import module.model.Image
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
+import module.model.Metadata
+import module.model.Trash
 
 @OptIn(ExperimentalTime::class)
 class MetadataRepository {

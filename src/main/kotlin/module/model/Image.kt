@@ -20,8 +20,8 @@ object ImageTable : IdTable<String>("images") {
     override val id = varchar("id", 255).entityId()
     override val primaryKey = PrimaryKey(id)
     val url = text("url")
-    val submission = reference("submission_id", _root_ide_package_.module.model.SubmissionTable, onDelete = ReferenceOption.CASCADE)
-    val mlStatus = varchar("ml_status", 50).default(_root_ide_package_.module.model.MLStatus.PENDING.name)
+    val submission = reference("submission_id", SubmissionTable, onDelete = ReferenceOption.CASCADE)
+    val mlStatus = varchar("ml_status", 50).default(MLStatus.PENDING.name)
     val mlError = varchar("ml_error", 500).nullable()
     val createdAt = timestamp("created_at")
     val updatedAt = timestamp("updated_at")
@@ -29,14 +29,14 @@ object ImageTable : IdTable<String>("images") {
 
 @OptIn(ExperimentalTime::class)
 class Image(id: EntityID<String>): Entity<String>(id) {
-    companion object: EntityClass<String, Image>(_root_ide_package_.module.model.ImageTable)
-    var url by _root_ide_package_.module.model.ImageTable.url
-    var submission by _root_ide_package_.module.model.Submission.Companion referencedOn _root_ide_package_.module.model.ImageTable.submission
-    var mlStatus by _root_ide_package_.module.model.ImageTable.mlStatus
-    var mlError by _root_ide_package_.module.model.ImageTable.mlError
-    var createdAt by _root_ide_package_.module.model.ImageTable.createdAt
-    var updatedAt by _root_ide_package_.module.model.ImageTable.updatedAt
-    val metadata by _root_ide_package_.module.model.Metadata.Companion referrersOn _root_ide_package_.module.model.MetadataTable.image
+    companion object: EntityClass<String, Image>(ImageTable)
+    var url by ImageTable.url
+    var submission by Submission.Companion referencedOn ImageTable.submission
+    var mlStatus by ImageTable.mlStatus
+    var mlError by ImageTable.mlError
+    var createdAt by ImageTable.createdAt
+    var updatedAt by ImageTable.updatedAt
+    val metadata by Metadata.Companion referrersOn MetadataTable.image
 
-    fun getMLStatus(): module.model.MLStatus = _root_ide_package_.module.model.MLStatus.valueOf(mlStatus)
+    fun getMLStatus(): module.model.MLStatus = MLStatus.valueOf(mlStatus)
 }

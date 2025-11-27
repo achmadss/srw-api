@@ -129,7 +129,7 @@ fun Application.configureRabbitMQ() {
     rabbitMQClient.connect()
 
     // Start ML results consumer
-    val machineLearningService = inject<module.service.MachineLearningService>()
+    val machineLearningService = inject<MachineLearningService>()
     machineLearningService.start()
 
     println("✓ RabbitMQ initialized and ML results consumer started")
@@ -138,19 +138,19 @@ fun Application.configureRabbitMQ() {
 fun Application.configureSchema() {
     transaction {
         SchemaUtils.create(
-            _root_ide_package_.module.model.AdminTable,
-            _root_ide_package_.module.model.AgentTable,
-            _root_ide_package_.module.model.ClientTable,
-            _root_ide_package_.module.model.ImageTable,
-            _root_ide_package_.module.model.MetadataTable,
-            _root_ide_package_.module.model.PointTable,
-            _root_ide_package_.module.model.SubmissionTable,
-            _root_ide_package_.module.model.SubmissionHistoryTable,
-            _root_ide_package_.module.model.RefreshTokenTable,
-            _root_ide_package_.module.model.TrashTable,
+            AdminTable,
+            AgentTable,
+            ClientTable,
+            ImageTable,
+            MetadataTable,
+            PointTable,
+            SubmissionTable,
+            SubmissionHistoryTable,
+            RefreshTokenTable,
+            TrashTable,
         )
-        inject<module.repository.AdminRepository>().seedDefaultAdmin()
-        inject<module.repository.TrashRepository>().seedTrashTypesFromConfig()
+        inject<AdminRepository>().seedDefaultAdmin()
+        inject<TrashRepository>().seedTrashTypesFromConfig()
     }
 }
 
@@ -249,20 +249,20 @@ fun Application.configureKoin() {
                     )
                 }
                 // Repositories
-                single<module.repository.RefreshTokenRepository> { _root_ide_package_.module.repository.RefreshTokenRepository() }
-                single<module.repository.AdminRepository> { _root_ide_package_.module.repository.AdminRepository() }
-                single<module.repository.AgentRepository> { _root_ide_package_.module.repository.AgentRepository() }
-                single<module.repository.ClientRepository> { _root_ide_package_.module.repository.ClientRepository() }
-                single<module.repository.TrashRepository> { _root_ide_package_.module.repository.TrashRepository() }
-                single<module.repository.SubmissionRepository> { _root_ide_package_.module.repository.SubmissionRepository() }
-                single<module.repository.SubmissionHistoryRepository> { _root_ide_package_.module.repository.SubmissionHistoryRepository() }
-                single<module.repository.ImageRepository> { _root_ide_package_.module.repository.ImageRepository() }
-                single<module.repository.MetadataRepository> { _root_ide_package_.module.repository.MetadataRepository() }
-                single<module.repository.PointRepository> { _root_ide_package_.module.repository.PointRepository() }
+                single<RefreshTokenRepository> { RefreshTokenRepository() }
+                single<AdminRepository> { AdminRepository() }
+                single<AgentRepository> { AgentRepository() }
+                single<ClientRepository> { ClientRepository() }
+                single<TrashRepository> { TrashRepository() }
+                single<SubmissionRepository> { SubmissionRepository() }
+                single<SubmissionHistoryRepository> { SubmissionHistoryRepository() }
+                single<ImageRepository> { ImageRepository() }
+                single<MetadataRepository> { MetadataRepository() }
+                single<PointRepository> { PointRepository() }
 
                 // Storage
-                single<module.service.MinIOStorageService>(createdAtStart = true) {
-                    _root_ide_package_.module.service.MinIOStorageService(
+                single<MinIOStorageService>(createdAtStart = true) {
+                    MinIOStorageService(
                         endpoint = getRequiredEnv(Env.MINIO_ENDPOINT),
                         accessKey = getRequiredEnv(Env.MINIO_ACCESS_KEY),
                         secretKey = getRequiredEnv(Env.MINIO_SECRET_KEY),
@@ -274,38 +274,38 @@ fun Application.configureKoin() {
                 single<RabbitMQClient>(createdAtStart = true) { RabbitMQClient() }
 
                 // Services
-                single<module.service.AuthService> {
-                    _root_ide_package_.module.service.AuthService(
+                single<AuthService> {
+                    AuthService(
                         adminRepository = get(),
                         clientRepository = get(),
                         agentRepository = get(),
                         refreshTokenRepository = get()
                     )
                 }
-                single<module.service.ImageService> {
-                    _root_ide_package_.module.service.ImageService(
+                single<ImageService> {
+                    ImageService(
                         imageRepository = get(),
                         storageService = get()
                     )
                 }
-                single<module.service.ClientService> {
-                    _root_ide_package_.module.service.ClientService(
+                single<ClientService> {
+                    ClientService(
                         clientRepository = get(),
                         pointRepository = get()
                     )
                 }
-                single<module.service.AgentService> {
-                    _root_ide_package_.module.service.AgentService(
+                single<AgentService> {
+                    AgentService(
                         agentRepository = get()
                     )
                 }
-                single<module.service.TrashService> {
-                    _root_ide_package_.module.service.TrashService(
+                single<TrashService> {
+                    TrashService(
                         trashRepository = get()
                     )
                 }
-                single<module.service.SubmissionService> {
-                    _root_ide_package_.module.service.SubmissionService(
+                single<SubmissionService> {
+                    SubmissionService(
                         submissionRepository = get(),
                         submissionHistoryRepository = get(),
                         imageRepository = get(),
@@ -316,8 +316,8 @@ fun Application.configureKoin() {
                         rabbitMQClient = get()
                     )
                 }
-                single<module.service.MachineLearningService> {
-                    _root_ide_package_.module.service.MachineLearningService(
+                single<MachineLearningService> {
+                    MachineLearningService(
                         rabbitMQClient = get(),
                         submissionRepository = get(),
                         submissionHistoryRepository = get(),

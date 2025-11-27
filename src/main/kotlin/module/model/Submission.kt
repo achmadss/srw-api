@@ -16,8 +16,8 @@ import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
 object SubmissionTable: IntIdTable("submissions") {
-    val client = reference("client_id", _root_ide_package_.module.model.ClientTable)
-    val agent = reference("agent_id", _root_ide_package_.module.model.AgentTable).nullable()
+    val client = reference("client_id", ClientTable)
+    val agent = reference("agent_id", AgentTable).nullable()
     val status = varchar("status", 50).default("PENDING")
     val rejectionReason = text("rejection_reason").nullable()
     val adminNotes = text("admin_notes").nullable()
@@ -33,28 +33,28 @@ object SubmissionTable: IntIdTable("submissions") {
 
 @OptIn(ExperimentalTime::class)
 class Submission(id: EntityID<Int>): IntEntity(id) {
-    companion object: IntEntityClass<Submission>(_root_ide_package_.module.model.SubmissionTable)
-    var client by _root_ide_package_.module.model.Client referencedOn _root_ide_package_.module.model.SubmissionTable.client
-    var agent by _root_ide_package_.module.model.Agent optionalReferencedOn _root_ide_package_.module.model.SubmissionTable.agent
-    var status by _root_ide_package_.module.model.SubmissionTable.status
-    var rejectionReason by _root_ide_package_.module.model.SubmissionTable.rejectionReason
-    var adminNotes by _root_ide_package_.module.model.SubmissionTable.adminNotes
-    var pickupLocation by _root_ide_package_.module.model.SubmissionTable.pickupLocation
-    var totalPoints by _root_ide_package_.module.model.SubmissionTable.totalPoints
-    var createdAt by _root_ide_package_.module.model.SubmissionTable.createdAt
-    var updatedAt by _root_ide_package_.module.model.SubmissionTable.updatedAt
-    var processedAt by _root_ide_package_.module.model.SubmissionTable.processedAt
-    var reviewedAt by _root_ide_package_.module.model.SubmissionTable.reviewedAt
-    var assignedAt by _root_ide_package_.module.model.SubmissionTable.assignedAt
-    var pickedUpAt by _root_ide_package_.module.model.SubmissionTable.pickedUpAt
-    val images by _root_ide_package_.module.model.Image referrersOn _root_ide_package_.module.model.ImageTable.submission
-    val points by _root_ide_package_.module.model.Point optionalReferrersOn _root_ide_package_.module.model.PointTable.submission
-    val history by _root_ide_package_.module.model.SubmissionHistory referrersOn _root_ide_package_.module.model.SubmissionHistoryTable.submission
+    companion object: IntEntityClass<Submission>(SubmissionTable)
+    var client by Client referencedOn SubmissionTable.client
+    var agent by Agent optionalReferencedOn SubmissionTable.agent
+    var status by SubmissionTable.status
+    var rejectionReason by SubmissionTable.rejectionReason
+    var adminNotes by SubmissionTable.adminNotes
+    var pickupLocation by SubmissionTable.pickupLocation
+    var totalPoints by SubmissionTable.totalPoints
+    var createdAt by SubmissionTable.createdAt
+    var updatedAt by SubmissionTable.updatedAt
+    var processedAt by SubmissionTable.processedAt
+    var reviewedAt by SubmissionTable.reviewedAt
+    var assignedAt by SubmissionTable.assignedAt
+    var pickedUpAt by SubmissionTable.pickedUpAt
+    val images by Image referrersOn ImageTable.submission
+    val points by Point optionalReferrersOn PointTable.submission
+    val history by SubmissionHistory referrersOn SubmissionHistoryTable.submission
 
     /**
      * Get the current status as enum
      */
-    fun getStatus(): module.model.SubmissionStatus = _root_ide_package_.module.model.SubmissionStatus.valueOf(status)
+    fun getStatus(): module.model.SubmissionStatus = SubmissionStatus.valueOf(status)
 
     /**
      * Set the status from enum
@@ -96,7 +96,7 @@ fun module.model.Submission.toResponse(): SubmissionResponse {
  * Extension function to convert Submission entity to SubmissionDetailResponse within a transaction
  */
 @OptIn(ExperimentalTime::class)
-fun module.model.Submission.toDetailResponse(): SubmissionDetailResponse {
+fun Submission.toDetailResponse(): SubmissionDetailResponse {
     return transaction {
         SubmissionDetailResponse(
             id = this@toDetailResponse.id.value,
@@ -139,7 +139,7 @@ fun module.model.Submission.toDetailResponse(): SubmissionDetailResponse {
  * Extension function to convert List of Submission entities to List of SubmissionResponse within a transaction
  */
 @OptIn(ExperimentalTime::class)
-fun List<module.model.Submission>.toResponses(): List<SubmissionResponse> {
+fun List<Submission>.toResponses(): List<SubmissionResponse> {
     return transaction {
         this@toResponses.map { submission ->
             SubmissionResponse(
@@ -169,7 +169,7 @@ fun List<module.model.Submission>.toResponses(): List<SubmissionResponse> {
  * Extension function to convert Submission entity to MLStatusResponse within a transaction
  */
 @OptIn(ExperimentalTime::class)
-fun module.model.Submission.toMLStatusResponse(): MLStatusResponse {
+fun Submission.toMLStatusResponse(): MLStatusResponse {
     return transaction {
         val images = this@toMLStatusResponse.images.map { image ->
             MLImageStatus(
@@ -179,8 +179,8 @@ fun module.model.Submission.toMLStatusResponse(): MLStatusResponse {
             )
         }
 
-        val processedImages = images.count { it.status == _root_ide_package_.module.model.MLStatus.COMPLETED.name }
-        val failedImages = images.count { it.status == _root_ide_package_.module.model.MLStatus.FAILED.name }
+        val processedImages = images.count { it.status == MLStatus.COMPLETED.name }
+        val failedImages = images.count { it.status == MLStatus.FAILED.name }
 
         MLStatusResponse(
             submissionId = this@toMLStatusResponse.id.value,

@@ -17,10 +17,10 @@ import io.ktor.server.resources.get
 import io.ktor.server.resources.post
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
-import module.v1.model.SubmissionStatus
-import module.v1.model.response.BaseResponse
-import module.v1.service.ImageUploadData
-import module.v1.service.SubmissionService
+import module.model.SubmissionStatus
+import module.model.response.BaseResponse
+import module.service.ImageUploadData
+import module.service.SubmissionService
 
 /**
  * Type-safe submission resources

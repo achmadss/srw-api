@@ -2,7 +2,7 @@ package module.repository
 
 import Env
 import getOptionalEnv
-import module.v1.model.Trash
+import module.model.Trash
 import util.TrashTypesConfigReader
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime

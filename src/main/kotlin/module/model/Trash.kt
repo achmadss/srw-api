@@ -19,17 +19,17 @@ object TrashTable: IdTable<String>("trashes") {
 
 @OptIn(ExperimentalTime::class)
 class Trash(id: EntityID<String>): Entity<String>(id) {
-    companion object: EntityClass<String, Trash>(_root_ide_package_.module.model.TrashTable)
+    companion object: EntityClass<String, Trash>(TrashTable)
     val name: String get() = id.value
-    var pointsPerUnit by _root_ide_package_.module.model.TrashTable.pointsPerUnit
-    var createdAt by _root_ide_package_.module.model.TrashTable.createdAt
-    var updatedAt by _root_ide_package_.module.model.TrashTable.updatedAt
-    val metadata by _root_ide_package_.module.model.Metadata referrersOn _root_ide_package_.module.model.MetadataTable.trash
+    var pointsPerUnit by TrashTable.pointsPerUnit
+    var createdAt by TrashTable.createdAt
+    var updatedAt by TrashTable.updatedAt
+    val metadata by Metadata referrersOn MetadataTable.trash
 }
 
 @OptIn(ExperimentalTime::class)
-fun module.model.Trash.toResponse(): module.service.TrashResponse {
-    return _root_ide_package_.module.service.TrashResponse(
+fun Trash.toResponse(): TrashResponse {
+    return TrashResponse(
         name = this.name,
         pointsPerUnit = this.pointsPerUnit,
         createdAt = this.createdAt,

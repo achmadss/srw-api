@@ -9,7 +9,7 @@ import io.ktor.server.resources.get
 import io.ktor.server.resources.post
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
-import module.v1.service.ClientService
+import module.service.ClientService
 import kotlin.getValue
 
 @Resource("/clients")

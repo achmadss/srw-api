@@ -12,15 +12,15 @@ import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
 class AdminRepository {
-    fun create(username: String, password: String): module.model.Admin {
+    fun create(username: String, password: String): Admin {
         require(username.isNotBlank()) { "Username cannot be blank" }
         require(password.isNotBlank()) { "Password cannot be blank" }
 
-        val existingAdmin = _root_ide_package_.module.model.Admin.find { _root_ide_package_.module.model.AdminTable.username eq username }.firstOrNull()
+        val existingAdmin = Admin.find { AdminTable.username eq username }.firstOrNull()
         require(existingAdmin == null) { "Admin with username '$username' already exists" }
 
         val now = Clock.System.now()
-        return _root_ide_package_.module.model.Admin.new {
+        return Admin.new {
             this.username = username
             this.password = PasswordUtil.hashPassword(password)
             this.createdAt = now
@@ -28,15 +28,15 @@ class AdminRepository {
         }
     }
 
-    fun findById(id: Int): module.model.Admin? {
-        return _root_ide_package_.module.model.Admin.findById(id)
+    fun findById(id: Int): Admin? {
+        return Admin.findById(id)
     }
 
-    fun findByUsername(username: String): module.model.Admin? {
-        return _root_ide_package_.module.model.Admin.find { _root_ide_package_.module.model.AdminTable.username eq username }.firstOrNull()
+    fun findByUsername(username: String): Admin? {
+        return Admin.find { AdminTable.username eq username }.firstOrNull()
     }
 
-    fun findAll(): List<module.model.Admin> {
+    fun findAll(): List<Admin> {
         return Admin.all().toList()
     }
 

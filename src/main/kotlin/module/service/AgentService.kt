@@ -2,11 +2,11 @@ package module.service
 
 import io.ktor.http.HttpStatusCode
 import kotlinx.serialization.Serializable
-import module.v1.model.toResponse
-import module.v1.model.toResponses
-import module.v1.model.response.BaseResponse
-import module.v1.model.response.PaginatedResponse
-import module.v1.repository.AgentRepository
+import module.model.toResponse
+import module.model.toResponses
+import module.model.response.BaseResponse
+import module.model.response.PaginatedResponse
+import module.repository.AgentRepository
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction

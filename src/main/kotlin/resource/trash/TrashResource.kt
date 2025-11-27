@@ -11,9 +11,9 @@ import io.ktor.server.resources.post
 import io.ktor.server.resources.put
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
-import module.v1.service.CreateTrashRequest
-import module.v1.service.TrashService
-import module.v1.service.UpdateTrashRequest
+import module.service.CreateTrashRequest
+import module.service.TrashService
+import module.service.UpdateTrashRequest
 
 /**
  * Type-safe trash resources

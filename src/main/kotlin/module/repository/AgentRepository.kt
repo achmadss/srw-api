@@ -1,7 +1,7 @@
 package module.repository
 
-import module.v1.model.Agent
-import module.v1.model.AgentTable
+import module.model.Agent
+import module.model.AgentTable
 import org.jetbrains.exposed.v1.core.eq
 import util.PasswordUtil
 import kotlin.time.Clock
@@ -68,9 +68,5 @@ class AgentRepository {
     fun delete(id: Int) {
         val agent = Agent.findById(id) ?: throw IllegalArgumentException("Agent with id $id not found")
         agent.delete()
-    }
-
-    fun verifyPassword(agent: Agent, password: String): Boolean {
-        return PasswordUtil.verifyPassword(password, agent.password)
     }
 }
