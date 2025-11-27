@@ -1,15 +1,15 @@
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.srw.util.inject
-import module.v1.model.AdminTable
-import module.v1.model.AgentTable
-import module.v1.model.ClientTable
-import module.v1.model.ImageTable
-import module.v1.model.MetadataTable
-import module.v1.model.PointTable
-import module.v1.model.SubmissionTable
-import module.v1.model.SubmissionHistoryTable
-import module.v1.model.TrashTable
+import module.model.AdminTable
+import module.model.AgentTable
+import module.model.ClientTable
+import module.model.ImageTable
+import module.model.MetadataTable
+import module.model.PointTable
+import module.model.SubmissionTable
+import module.model.SubmissionHistoryTable
+import module.model.TrashTable
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.*
@@ -26,25 +26,25 @@ import resource.auth.NfcAuthRequest
 import resource.auth.RefreshTokenAuthRequest
 import resource.client.ClientResource
 import resource.client.CreateClientRequest
-import module.v1.model.RefreshTokenTable
-import module.v1.repository.AdminRepository
-import module.v1.repository.AgentRepository
-import module.v1.repository.ClientRepository
-import module.v1.repository.ImageRepository
-import module.v1.repository.MetadataRepository
-import module.v1.repository.PointRepository
-import module.v1.repository.RefreshTokenRepository
-import module.v1.repository.SubmissionRepository
-import module.v1.repository.SubmissionHistoryRepository
-import module.v1.repository.TrashRepository
-import module.v1.service.AgentService
-import module.v1.service.AuthService
-import module.v1.service.ClientService
-import module.v1.service.ImageService
-import module.v1.service.MachineLearningService
-import module.v1.service.SubmissionService
-import module.v1.service.TrashService
-import module.v1.service.MinIOStorageService
+import module.model.RefreshTokenTable
+import module.repository.AdminRepository
+import module.repository.AgentRepository
+import module.repository.ClientRepository
+import module.repository.ImageRepository
+import module.repository.MetadataRepository
+import module.repository.PointRepository
+import module.repository.RefreshTokenRepository
+import module.repository.SubmissionRepository
+import module.repository.SubmissionHistoryRepository
+import module.repository.TrashRepository
+import module.service.AgentService
+import module.service.AuthService
+import module.service.ClientService
+import module.service.ImageService
+import module.service.MachineLearningService
+import module.service.SubmissionService
+import module.service.TrashService
+import module.service.MinIOStorageService
 import util.RabbitMQClient
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
@@ -129,7 +129,7 @@ fun Application.configureRabbitMQ() {
     rabbitMQClient.connect()
 
     // Start ML results consumer
-    val machineLearningService = inject<MachineLearningService>()
+    val machineLearningService = inject<module.service.MachineLearningService>()
     machineLearningService.start()
 
     println("✓ RabbitMQ initialized and ML results consumer started")
@@ -138,19 +138,19 @@ fun Application.configureRabbitMQ() {
 fun Application.configureSchema() {
     transaction {
         SchemaUtils.create(
-            AdminTable,
-            AgentTable,
-            ClientTable,
-            ImageTable,
-            MetadataTable,
-            PointTable,
-            SubmissionTable,
-            SubmissionHistoryTable,
-            RefreshTokenTable,
-            TrashTable,
+            _root_ide_package_.module.model.AdminTable,
+            _root_ide_package_.module.model.AgentTable,
+            _root_ide_package_.module.model.ClientTable,
+            _root_ide_package_.module.model.ImageTable,
+            _root_ide_package_.module.model.MetadataTable,
+            _root_ide_package_.module.model.PointTable,
+            _root_ide_package_.module.model.SubmissionTable,
+            _root_ide_package_.module.model.SubmissionHistoryTable,
+            _root_ide_package_.module.model.RefreshTokenTable,
+            _root_ide_package_.module.model.TrashTable,
         )
-        inject<AdminRepository>().seedDefaultAdmin()
-        inject<TrashRepository>().seedTrashTypesFromConfig()
+        inject<module.repository.AdminRepository>().seedDefaultAdmin()
+        inject<module.repository.TrashRepository>().seedTrashTypesFromConfig()
     }
 }
 
@@ -249,20 +249,20 @@ fun Application.configureKoin() {
                     )
                 }
                 // Repositories
-                single<RefreshTokenRepository> { RefreshTokenRepository() }
-                single<AdminRepository> { AdminRepository() }
-                single<AgentRepository> { AgentRepository() }
-                single<ClientRepository> { ClientRepository() }
-                single<TrashRepository> { TrashRepository() }
-                single<SubmissionRepository> { SubmissionRepository() }
-                single<SubmissionHistoryRepository> { SubmissionHistoryRepository() }
-                single<ImageRepository> { ImageRepository() }
-                single<MetadataRepository> { MetadataRepository() }
-                single<PointRepository> { PointRepository() }
+                single<module.repository.RefreshTokenRepository> { _root_ide_package_.module.repository.RefreshTokenRepository() }
+                single<module.repository.AdminRepository> { _root_ide_package_.module.repository.AdminRepository() }
+                single<module.repository.AgentRepository> { _root_ide_package_.module.repository.AgentRepository() }
+                single<module.repository.ClientRepository> { _root_ide_package_.module.repository.ClientRepository() }
+                single<module.repository.TrashRepository> { _root_ide_package_.module.repository.TrashRepository() }
+                single<module.repository.SubmissionRepository> { _root_ide_package_.module.repository.SubmissionRepository() }
+                single<module.repository.SubmissionHistoryRepository> { _root_ide_package_.module.repository.SubmissionHistoryRepository() }
+                single<module.repository.ImageRepository> { _root_ide_package_.module.repository.ImageRepository() }
+                single<module.repository.MetadataRepository> { _root_ide_package_.module.repository.MetadataRepository() }
+                single<module.repository.PointRepository> { _root_ide_package_.module.repository.PointRepository() }
 
                 // Storage
-                single<MinIOStorageService>(createdAtStart = true) {
-                    MinIOStorageService(
+                single<module.service.MinIOStorageService>(createdAtStart = true) {
+                    _root_ide_package_.module.service.MinIOStorageService(
                         endpoint = getRequiredEnv(Env.MINIO_ENDPOINT),
                         accessKey = getRequiredEnv(Env.MINIO_ACCESS_KEY),
                         secretKey = getRequiredEnv(Env.MINIO_SECRET_KEY),
@@ -274,38 +274,38 @@ fun Application.configureKoin() {
                 single<RabbitMQClient>(createdAtStart = true) { RabbitMQClient() }
 
                 // Services
-                single<AuthService> {
-                    AuthService(
+                single<module.service.AuthService> {
+                    _root_ide_package_.module.service.AuthService(
                         adminRepository = get(),
                         clientRepository = get(),
                         agentRepository = get(),
                         refreshTokenRepository = get()
                     )
                 }
-                single<ImageService> {
-                    ImageService(
+                single<module.service.ImageService> {
+                    _root_ide_package_.module.service.ImageService(
                         imageRepository = get(),
                         storageService = get()
                     )
                 }
-                single<ClientService> {
-                    ClientService(
+                single<module.service.ClientService> {
+                    _root_ide_package_.module.service.ClientService(
                         clientRepository = get(),
                         pointRepository = get()
                     )
                 }
-                single<AgentService> {
-                    AgentService(
+                single<module.service.AgentService> {
+                    _root_ide_package_.module.service.AgentService(
                         agentRepository = get()
                     )
                 }
-                single<TrashService> {
-                    TrashService(
+                single<module.service.TrashService> {
+                    _root_ide_package_.module.service.TrashService(
                         trashRepository = get()
                     )
                 }
-                single<SubmissionService> {
-                    SubmissionService(
+                single<module.service.SubmissionService> {
+                    _root_ide_package_.module.service.SubmissionService(
                         submissionRepository = get(),
                         submissionHistoryRepository = get(),
                         imageRepository = get(),
@@ -316,8 +316,8 @@ fun Application.configureKoin() {
                         rabbitMQClient = get()
                     )
                 }
-                single<MachineLearningService> {
-                    MachineLearningService(
+                single<module.service.MachineLearningService> {
+                    _root_ide_package_.module.service.MachineLearningService(
                         rabbitMQClient = get(),
                         submissionRepository = get(),
                         submissionHistoryRepository = get(),
