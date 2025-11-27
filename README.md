@@ -280,7 +280,7 @@ All roles have identical auth flow with different login credentials:
   - Auth: ADMIN
   - Response: Per-image ML status
 
-- `POST /submissions/{id}/images/{imageId}/metadata` - Manually add metadata
+- `POST /submissions/{id}/images/{imageId}/metadata` - Manually update metadata
   - Auth: ADMIN
   - Use case: ML processing failed, manual classification needed
   - Body:
