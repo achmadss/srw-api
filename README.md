@@ -178,7 +178,7 @@ docker-compose up -d postgres minio rabbitmq ml-service
 
 ## API Endpoints
 
-Base URL: `http://localhost:8080/v1`
+Base URL: `http://localhost:8080`
 
 ### Authentication
 
