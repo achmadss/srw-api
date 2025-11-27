@@ -340,37 +340,45 @@ echo ""
 # ===================================
 # TEST 5: Upload Images (if test images exist)
 # ===================================
-run_test "Upload Test Image"
-if [ -f "test-images/image1.png" ]; then
-    echo -e "${BLUE}  → curl -s -w \"\\n%{http_code}\" -H \"Authorization: Bearer $CLIENT_TOKEN\" -F \"image=@test-images/image1.png\" \"$API_URL/submissions/new\"${NC}" >&2
-    UPLOAD_RESPONSE=$(curl -s -w "\n%{http_code}" \
-        -H "Authorization: Bearer $CLIENT_TOKEN" \
-        -F "image=@test-images/image1.png" \
-        "$API_URL/submissions/new")
-
-    http_code=$(echo "$UPLOAD_RESPONSE" | tail -n1)
-    body=$(echo "$UPLOAD_RESPONSE" | sed '$d')
-
-    if [ "$http_code" -eq 201 ]; then
-        SUBMISSION_ID=$(json_value_number "$body" "id")
-        if [ -n "$SUBMISSION_ID" ]; then
-            echo -e "${GREEN}  ✓ PASSED${NC}"
-            pass_count=$((pass_count + 1))
-            echo "  → Submission created with ID: $SUBMISSION_ID"
+# List image files in test-images directory
+IMAGE_FILES=($(find test-images -type f \( -iname "*.png" -o -iname "*.jpg" -o -iname "*.jpeg" \) 2>/dev/null))
+if [ ${#IMAGE_FILES[@]} -eq 0 ]; then
+    echo -e "${YELLOW}  ⊘ SKIPPED - No image files found in test-images directory${NC}"
+    echo "  Create test-images directory with sample images (.png, .jpg, .jpeg) to test image upload"
+else
+    # Randomly select one image
+    RANDOM_IMAGE=${IMAGE_FILES[$((RANDOM % ${#IMAGE_FILES[@]}))]}
+    run_test "Upload Test Image ($RANDOM_IMAGE)"
+    if [ -f "$RANDOM_IMAGE" ]; then
+        echo -e "${BLUE}  → curl -s -w \"\\n%{http_code}\" -H \"Authorization: Bearer $CLIENT_TOKEN\" -F \"image=@$RANDOM_IMAGE\" \"$API_URL/submissions/new\"${NC}" >&2
+        UPLOAD_RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -H "Authorization: Bearer $CLIENT_TOKEN" \
+            -F "image=@$RANDOM_IMAGE" \
+            "$API_URL/submissions/new")
+        
+        http_code=$(echo "$UPLOAD_RESPONSE" | tail -n1)
+        body=$(echo "$UPLOAD_RESPONSE" | sed '$d')
+        
+        if [ "$http_code" -eq 201 ]; then
+            SUBMISSION_ID=$(json_value_number "$body" "id")
+            if [ -n "$SUBMISSION_ID" ]; then
+                echo -e "${GREEN}  ✓ PASSED${NC}"
+                pass_count=$((pass_count + 1))
+                echo "  → Submission created with ID: $SUBMISSION_ID"
+            else
+                echo -e "${RED}  ✗ FAILED - Could not extract submission ID${NC}"
+                fail_count=$((fail_count + 1))
+            fi
         else
-            echo -e "${RED}  ✗ FAILED - Could not extract submission ID${NC}"
+            echo -e "${RED}  ✗ FAILED - HTTP $http_code${NC}"
             fail_count=$((fail_count + 1))
+            if [ "$VERBOSE" = true ]; then
+                echo "Response: $body"
+            fi
         fi
     else
-        echo -e "${RED}  ✗ FAILED - HTTP $http_code${NC}"
-        fail_count=$((fail_count + 1))
-        if [ "$VERBOSE" = true ]; then
-            echo "Response: $body"
-        fi
+        echo -e "${YELLOW}  ⊘ SKIPPED - Selected image $RANDOM_IMAGE not found${NC}"
     fi
-else
-    echo -e "${YELLOW}  ⊘ SKIPPED - test-images/image1.png not found${NC}"
-    echo "  Create test-images directory with sample images to test image upload"
 fi
 echo ""
 
