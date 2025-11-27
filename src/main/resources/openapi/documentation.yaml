@@ -205,6 +205,7 @@ paths:
                 $ref: '#/components/schemas/BaseResponse'
       security:
         - bearerAuth: []
+  /clients/new:
     post:
       summary: Create new client
       description: Create a new client. Requires admin authentication.
@@ -335,6 +336,7 @@ paths:
                 $ref: '#/components/schemas/BaseResponse'
       security:
         - bearerAuth: []
+  /agents/new:
     post:
       summary: Create new agent
       description: Create a new agent. Requires admin authentication.
@@ -528,6 +530,7 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/TrashResponse'
+  /trash/new:
     post:
       summary: Create new trash type
       description: Create a new trash type. Requires admin authentication.
@@ -740,6 +743,7 @@ paths:
                 $ref: '#/components/schemas/BaseResponse'
       security:
         - bearerAuth: []
+  /submissions/new:
     post:
       summary: Create new submission
       description: Create a new submission with uploaded images. Requires client authentication.
