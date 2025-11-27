@@ -13,6 +13,7 @@ import requests
 from collections import Counter
 
 from config_loader import get_trash_types_config, TrashTypesConfig
+from mapper import mapper
 
 # --- ENVIRONMENT ---
 RABBITMQ_URL = os.getenv("RABBITMQ_URL", "amqp://admin:admin@rabbitmq:5672")
@@ -44,15 +45,14 @@ def preprocess(img: Image.Image) -> np.ndarray:
     return img_resized
 
 
-def postprocess(outputs, score_threshold=0.25):
-    """Parse YOLO ONNX output into bounding boxes, scores, and class IDs."""
-    preds = outputs[0]  # (1, num_boxes, 85) → YOLO format
+def postprocess(outputs, score_threshold=0.5):
+    """Parse YOLOv8 ONNX output into bounding boxes, scores, and class IDs."""
+    preds = outputs[0]  # (1, nc+4, num_boxes)
 
-    preds = preds[0]  # remove batch dimension
+    preds = preds[0].transpose(1, 0)  # (num_boxes, nc+4)
 
     boxes = preds[:, :4]
-    scores = preds[:, 4]
-    class_scores = preds[:, 5:]
+    class_scores = preds[:, 4:]
 
     class_ids = np.argmax(class_scores, axis=1)
     confidences = np.max(class_scores, axis=1)
@@ -62,7 +62,7 @@ def postprocess(outputs, score_threshold=0.25):
         if confidences[i] < score_threshold:
             continue
         results.append({
-            "class_id": int(class_ids[i]),
+            "class_name": mapper[str(class_ids[i])],
             "confidence": float(confidences[i]),
         })
 
@@ -88,13 +88,13 @@ def process_image(image_id: str, image_url: str, trash_config: TrashTypesConfig)
         detections = postprocess(outputs)
 
         # 5. Count classes
-        detected_classes = [d["class_id"] for d in detections]
+        detected_classes = [d["class_name"] for d in detections]
 
         counts = Counter(detected_classes)
 
         trash_items = [
-            {"type": cls_id, "amount": count}
-            for cls_id, count in counts.items()
+            {"type": cls_name, "amount": count}
+            for cls_name, count in counts.items()
         ]
 
         # Map to your configured trash types

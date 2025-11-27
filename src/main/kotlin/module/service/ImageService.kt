@@ -46,7 +46,7 @@ class ImageService(
             )
 
             // Get public URL
-            val imageUrl = storageService.getObjectUrl(objectKey)
+            val imageUrl = storageService.getPresignedUrl(objectKey)
 
             // Create database record with objectKey as ID (unique)
             imageRepository.create(
