@@ -1,7 +1,7 @@
 package resource.submission
 
 import kotlinx.serialization.Serializable
-import module.v1.model.SubmissionStatus
+import module.model.SubmissionStatus
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
