@@ -1,3 +1,10 @@
+import config.configureHttp
+import config.configureKoin
+import config.configureRabbitMQ
+import config.configureRequestValidation
+import config.configureSchema
+import config.configureSecurity
+import config.configureSerialization
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.engine.embeddedServer
