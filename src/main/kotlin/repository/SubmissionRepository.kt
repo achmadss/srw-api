@@ -1,10 +1,6 @@
 package repository
 
-import model.Agent
-import model.Client
-import model.Submission
-import model.SubmissionStatus
-import model.SubmissionTable
+import model.*
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq

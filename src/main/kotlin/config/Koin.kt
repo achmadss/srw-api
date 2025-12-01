@@ -1,30 +1,13 @@
 package config
 
+import Env
 import getRequiredEnv
-import io.ktor.server.application.Application
-import io.ktor.server.application.install
+import io.ktor.server.application.*
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
-import repository.AdminRepository
-import repository.AgentRepository
-import repository.ClientRepository
-import repository.ImageRepository
-import repository.MetadataRepository
-import repository.PointRepository
-import repository.RefreshTokenRepository
-import repository.SubmissionHistoryRepository
-import repository.SubmissionRepository
-import repository.TrashRepository
-import service.AgentService
-import service.AuthService
-import service.ClientService
-import service.ImageService
-import service.MachineLearningService
-import service.MinIOStorageService
-import service.PointService
-import service.SubmissionService
-import service.TrashService
+import repository.*
+import service.*
 import util.RabbitMQClient
 
 fun Application.configureKoin() {

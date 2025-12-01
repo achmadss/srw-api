@@ -1,9 +1,9 @@
 package service
 
 import model.Image
-import java.io.InputStream
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import repository.ImageRepository
+import java.io.InputStream
 
 /**
  * Service for handling image operations (no public routes)

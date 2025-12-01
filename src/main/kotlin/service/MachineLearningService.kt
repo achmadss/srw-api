@@ -6,16 +6,12 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import model.MLStatus
 import model.SubmissionStatus
-import repository.ImageRepository
-import repository.MetadataRepository
-import repository.SubmissionRepository
-import repository.SubmissionHistoryRepository
-import repository.TrashRepository
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import repository.*
 import util.MLAckMessage
 import util.MLResultMessage
 import util.RabbitMQClient
 import kotlin.time.ExperimentalTime
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 @OptIn(ExperimentalTime::class)
 class MachineLearningService(

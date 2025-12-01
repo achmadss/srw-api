@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
+import cv2
 import json
-import os
-import pika
-import time
-from typing import Dict
 import numpy as np
 import onnxruntime as ort
-import cv2
-from PIL import Image
-from io import BytesIO
+import os
+import pika
 import requests
+import time
+from PIL import Image
 from collections import Counter
+from io import BytesIO
+from typing import Dict
 
 from config_loader import get_trash_types_config, TrashTypesConfig
 from mapper import mapper

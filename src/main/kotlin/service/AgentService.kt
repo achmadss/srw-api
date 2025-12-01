@@ -1,13 +1,13 @@
 package service
 
-import io.ktor.http.HttpStatusCode
+import io.ktor.http.*
 import model.response.AgentResponse
-import model.toAgentResponse
-import model.toAgentResponses
 import model.response.base.BaseResponse
 import model.response.base.PaginatedResponse
-import repository.AgentRepository
+import model.toAgentResponse
+import model.toAgentResponses
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import repository.AgentRepository
 
 /**
  * Service for agent management operations

@@ -1,11 +1,6 @@
 package model
 
-import model.response.ImageMetadataResponse
-import model.response.MLImageStatus
-import model.response.MLStatusResponse
-import model.response.SubmissionDetailResponse
-import model.response.SubmissionImageResponse
-import model.response.SubmissionResponse
+import model.response.*
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.dao.IntEntity

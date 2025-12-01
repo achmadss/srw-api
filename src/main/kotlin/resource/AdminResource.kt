@@ -1,30 +1,18 @@
 package resource
 
+import JwtAuth
 import com.srw.util.injectLazy
-import io.ktor.resources.Resource
-import io.ktor.server.auth.authenticate
-import io.ktor.server.request.receive
-import io.ktor.server.resources.delete
-import io.ktor.server.resources.get
+import io.ktor.resources.*
+import io.ktor.server.auth.*
+import io.ktor.server.request.*
+import io.ktor.server.resources.*
 import io.ktor.server.resources.post
 import io.ktor.server.resources.put
-import io.ktor.server.response.respond
+import io.ktor.server.response.*
 import io.ktor.server.routing.Route
 import model.SubmissionStatus
-import model.request.CreateAgentRequest
-import model.request.UpdateAgentRequest
-import model.request.CreateClientRequest
-import model.request.ClaimPointsRequest
-import model.request.AssignAgentRequest
-import model.request.CreateTrashRequest
-import model.request.ManualMetadataRequest
-import model.request.ReviewSubmissionRequest
-import model.request.UpdateTrashRequest
-import service.AgentService
-import service.ClientService
-import service.PointService
-import service.SubmissionService
-import service.TrashService
+import model.request.*
+import service.*
 
 /**
  * Type-safe admin resources consolidating all admin-only endpoints

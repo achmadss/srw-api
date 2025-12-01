@@ -1,8 +1,6 @@
 package model.request
 
 import kotlinx.serialization.Serializable
-import kotlin.time.ExperimentalTime
-import kotlin.time.Instant
 
 /**
  * Request to create a new agent

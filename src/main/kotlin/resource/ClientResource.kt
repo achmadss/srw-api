@@ -2,24 +2,20 @@ package resource
 
 import JwtAuth
 import com.srw.util.injectLazy
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.content.PartData
-import io.ktor.http.content.forEachPart
-import io.ktor.http.content.streamProvider
-import io.ktor.resources.Resource
-import io.ktor.server.auth.authenticate
-import io.ktor.server.auth.jwt.JWTPrincipal
-import io.ktor.server.auth.principal
-import io.ktor.server.request.receiveMultipart
-import io.ktor.server.resources.get
+import io.ktor.http.*
+import io.ktor.http.content.*
+import io.ktor.resources.*
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
+import io.ktor.server.request.*
+import io.ktor.server.resources.*
 import io.ktor.server.resources.post
-import io.ktor.server.response.respond
+import io.ktor.server.response.*
 import io.ktor.server.routing.Route
 import model.response.base.BaseResponse
 import service.ImageUploadData
 import service.PointService
 import service.SubmissionService
-import kotlin.getValue
 
 @Resource("/clients")
 class ClientResource {

@@ -2,19 +2,18 @@ package resource
 
 import JwtAuth
 import com.srw.util.injectLazy
-import io.ktor.http.HttpStatusCode
-import io.ktor.resources.Resource
-import io.ktor.server.auth.authenticate
-import io.ktor.server.auth.jwt.JWTPrincipal
-import io.ktor.server.auth.principal
-import io.ktor.server.request.receive
-import io.ktor.server.resources.get
+import io.ktor.http.*
+import io.ktor.resources.*
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
+import io.ktor.server.request.*
+import io.ktor.server.resources.*
 import io.ktor.server.resources.post
-import io.ktor.server.response.respond
+import io.ktor.server.response.*
 import io.ktor.server.routing.Route
+import model.request.ConfirmPickupRequest
 import model.response.base.BaseResponse
 import service.SubmissionService
-import model.request.ConfirmPickupRequest
 
 /**
  * Type-safe agent resources

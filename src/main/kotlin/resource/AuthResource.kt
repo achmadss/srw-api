@@ -1,16 +1,15 @@
 package resource
 
 import com.srw.util.injectLazy
-import io.ktor.resources.Resource
-import io.ktor.server.request.receive
+import io.ktor.resources.*
+import io.ktor.server.request.*
 import io.ktor.server.resources.post
-import io.ktor.server.response.respond
+import io.ktor.server.response.*
 import io.ktor.server.routing.Route
 import model.request.BasicAuthRequest
 import model.request.NfcAuthRequest
 import model.request.RefreshTokenAuthRequest
 import service.AuthService
-import kotlin.getValue
 
 @Resource("/auth")
 class AuthResource {

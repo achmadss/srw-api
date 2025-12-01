@@ -1,17 +1,18 @@
 package service
 
+import Env
 import UserType
 import getRequiredEnv
-import io.ktor.http.HttpStatusCode
+import io.ktor.http.*
 import model.request.TokenPair
 import model.response.base.BaseResponse
-import util.JwtUtil
-import util.PasswordUtil
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import repository.AdminRepository
 import repository.AgentRepository
 import repository.ClientRepository
 import repository.RefreshTokenRepository
+import util.JwtUtil
+import util.PasswordUtil
 
 class AuthService(
     private val adminRepository: AdminRepository,

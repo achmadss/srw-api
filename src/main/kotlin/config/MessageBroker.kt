@@ -1,7 +1,7 @@
 package config
 
 import com.srw.util.inject
-import io.ktor.server.application.Application
+import io.ktor.server.application.*
 import service.MachineLearningService
 import util.RabbitMQClient
 

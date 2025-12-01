@@ -1,11 +1,11 @@
 package service
 
-import io.ktor.http.HttpStatusCode
+import io.ktor.http.*
 import model.response.TrashResponse
 import model.response.base.BaseResponse
 import model.toTrashResponse
-import repository.TrashRepository
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import repository.TrashRepository
 
 /**
  * Service for trash type management operations

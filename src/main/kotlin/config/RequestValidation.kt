@@ -1,20 +1,8 @@
 package config
 
 import io.ktor.server.application.*
-import io.ktor.server.plugins.requestvalidation.RequestValidation
-import io.ktor.server.plugins.requestvalidation.ValidationResult
-import model.request.BasicAuthRequest
-import model.request.NfcAuthRequest
-import model.request.RefreshTokenAuthRequest
-import model.request.CreateClientRequest
-import model.request.ClaimPointsRequest
-import model.request.ReviewSubmissionRequest
-import model.request.AssignAgentRequest
-import model.request.ManualMetadataRequest
-import model.request.CreateAgentRequest
-import model.request.UpdateAgentRequest
-import model.request.CreateTrashRequest
-import model.request.UpdateTrashRequest
+import io.ktor.server.plugins.requestvalidation.*
+import model.request.*
 import resource.AdminResource
 
 fun Application.configureRequestValidation() {

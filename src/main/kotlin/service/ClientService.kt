@@ -1,6 +1,6 @@
 package service
 
-import io.ktor.http.HttpStatusCode
+import io.ktor.http.*
 import model.response.ClientResponse
 import model.response.base.BaseResponse
 import model.response.base.PaginatedResponse

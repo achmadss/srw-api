@@ -1,15 +1,8 @@
-import config.configureHttp
-import config.configureKoin
-import config.configureRabbitMQ
-import config.configureRequestValidation
-import config.configureSchema
-import config.configureSecurity
-import config.configureSerialization
-import io.ktor.server.application.Application
-import io.ktor.server.application.install
-import io.ktor.server.engine.embeddedServer
-import io.ktor.server.netty.Netty
-import io.ktor.server.resources.Resources
+import config.*
+import io.ktor.server.application.*
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
+import io.ktor.server.resources.*
 import resource.configureResources
 
 fun main(args: Array<String>) {
