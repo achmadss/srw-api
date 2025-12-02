@@ -2,7 +2,6 @@ package util
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import com.auth0.jwt.exceptions.JWTVerificationException
 import java.util.*
 
 object JwtUtil {

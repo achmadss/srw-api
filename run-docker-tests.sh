@@ -299,7 +299,7 @@ echo ""
 # TEST 2: Create Client
 # ===================================
 run_test "Create Client (NFC: $CLIENT_NFC)"
-CLIENT_CREATE_RESPONSE=$(api_request POST "/clients/new" "{\"name\":\"Docker Test Client\",\"nfc\":\"$CLIENT_NFC\",\"address\":\"123 Docker St\"}" "$ADMIN_TOKEN" 201)
+CLIENT_CREATE_RESPONSE=$(api_request POST "/admin/clients/new" "{\"name\":\"Docker Test Client\",\"nfc\":\"$CLIENT_NFC\",\"address\":\"123 Docker St\"}" "$ADMIN_TOKEN" 201)
 if assert_success; then
     echo "  → Client created successfully"
 fi
@@ -309,7 +309,7 @@ echo ""
 # TEST 3: Create Agent
 # ===================================
 run_test "Create Agent (Username: $AGENT_USERNAME)"
-AGENT_CREATE_RESPONSE=$(api_request POST "/agents/new" "{\"name\":\"Docker Test Agent\",\"username\":\"$AGENT_USERNAME\",\"password\":\"$AGENT_PASSWORD\"}" "$ADMIN_TOKEN" 201)
+AGENT_CREATE_RESPONSE=$(api_request POST "/admin/agents/new" "{\"name\":\"Docker Test Agent\",\"username\":\"$AGENT_USERNAME\",\"password\":\"$AGENT_PASSWORD\"}" "$ADMIN_TOKEN" 201)
 if assert_success; then
     AGENT_ID=$(json_value_number "$AGENT_CREATE_RESPONSE" "id")
     if [ -n "$AGENT_ID" ]; then
@@ -350,11 +350,11 @@ else
     RANDOM_IMAGE=${IMAGE_FILES[$((RANDOM % ${#IMAGE_FILES[@]}))]}
     run_test "Upload Test Image ($RANDOM_IMAGE)"
     if [ -f "$RANDOM_IMAGE" ]; then
-        echo -e "${BLUE}  → curl -s -w \"\\n%{http_code}\" -H \"Authorization: Bearer $CLIENT_TOKEN\" -F \"image=@$RANDOM_IMAGE\" \"$API_URL/submissions/new\"${NC}" >&2
+        echo -e "${BLUE}  → curl -s -w \"\\n%{http_code}\" -H \"Authorization: Bearer $CLIENT_TOKEN\" -F \"image=@$RANDOM_IMAGE\" \"$API_URL/clients/submissions/new\"${NC}" >&2
         UPLOAD_RESPONSE=$(curl -s -w "\n%{http_code}" \
             -H "Authorization: Bearer $CLIENT_TOKEN" \
             -F "image=@$RANDOM_IMAGE" \
-            "$API_URL/submissions/new")
+            "$API_URL/clients/submissions/new")
         
         http_code=$(echo "$UPLOAD_RESPONSE" | tail -n1)
         body=$(echo "$UPLOAD_RESPONSE" | sed '$d')
@@ -393,9 +393,9 @@ if [ -n "$SUBMISSION_ID" ]; then
 
     while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
         if [ $ATTEMPT -eq 0 ]; then
-            echo -e "${BLUE}  → curl -s -H \"Authorization: Bearer $ADMIN_TOKEN\" \"$API_URL/submissions/$SUBMISSION_ID\"${NC}" >&2
+            echo -e "${BLUE}  → curl -s -H \"Authorization: Bearer $ADMIN_TOKEN\" \"$API_URL/admin/submissions/$SUBMISSION_ID\"${NC}" >&2
         fi
-        SUBMISSION_RESPONSE=$(curl -s -H "Authorization: Bearer $ADMIN_TOKEN" "$API_URL/submissions/$SUBMISSION_ID")
+        SUBMISSION_RESPONSE=$(curl -s -H "Authorization: Bearer $ADMIN_TOKEN" "$API_URL/admin/submissions/$SUBMISSION_ID")
         STATUS=$(json_value "$SUBMISSION_RESPONSE" "status")
 
         if [ "$STATUS" = "AWAITING_REVIEW" ]; then
@@ -433,7 +433,7 @@ if [ -n "$SUBMISSION_ID" ]; then
     # ===================================
     if [ "$ML_COMPLETED" = true ]; then
         run_test "Admin Review and Approve Submission"
-        REVIEW_RESPONSE=$(api_request POST "/submissions/$SUBMISSION_ID/review" "{\"approved\":true,\"rejectionReason\":null,\"adminNotes\":\"Docker test approval\"}" "$ADMIN_TOKEN" 200)
+        REVIEW_RESPONSE=$(api_request POST "/admin/submissions/$SUBMISSION_ID/review" "{\"approved\":true,\"rejectionReason\":null,\"adminNotes\":\"Docker test approval\"}" "$ADMIN_TOKEN" 200)
         if assert_success; then
             REVIEW_STATUS=$(json_value "$REVIEW_RESPONSE" "status")
             if [ "$REVIEW_STATUS" = "APPROVED" ]; then
@@ -449,7 +449,7 @@ if [ -n "$SUBMISSION_ID" ]; then
         # ===================================
         if [ -n "$AGENT_ID" ]; then
             run_test "Admin Assign Agent to Submission"
-            ASSIGN_RESPONSE=$(api_request POST "/submissions/$SUBMISSION_ID/assign" "{\"agentId\":$AGENT_ID}" "$ADMIN_TOKEN" 200)
+            ASSIGN_RESPONSE=$(api_request POST "/admin/submissions/$SUBMISSION_ID/assign" "{\"agentId\":$AGENT_ID}" "$ADMIN_TOKEN" 200)
             if assert_success; then
                 ASSIGN_STATUS=$(json_value "$ASSIGN_RESPONSE" "status")
                 TOTAL_POINTS=$(json_value_number "$ASSIGN_RESPONSE" "totalPoints")
@@ -482,7 +482,7 @@ if [ -n "$SUBMISSION_ID" ]; then
             # ===================================
             if [ -n "$AGENT_TOKEN" ]; then
                 run_test "Agent Confirm Pickup"
-                PICKUP_RESPONSE=$(api_request POST "/submissions/$SUBMISSION_ID/pickup" "{\"notes\":\"Docker test pickup\"}" "$AGENT_TOKEN" 200)
+                PICKUP_RESPONSE=$(api_request POST "/agents/submissions/$SUBMISSION_ID/pickup" "{\"notes\":\"Docker test pickup\"}" "$AGENT_TOKEN" 200)
                 if assert_success; then
                     PICKUP_STATUS=$(json_value "$PICKUP_RESPONSE" "status")
                     if [ "$PICKUP_STATUS" = "PICKED_UP" ]; then
@@ -498,7 +498,7 @@ if [ -n "$SUBMISSION_ID" ]; then
             # TEST 11: Verify Client Points
             # ===================================
             run_test "Verify Client Points Updated"
-            CLIENT_CHECK_RESPONSE=$(api_request GET "/clients/$CLIENT_NFC" "" "$ADMIN_TOKEN" 200)
+            CLIENT_CHECK_RESPONSE=$(api_request GET "/admin/clients" "" "$ADMIN_TOKEN" 200)
             if assert_success; then
                 CLIENT_TOTAL_POINTS=$(json_value_number "$CLIENT_CHECK_RESPONSE" "totalPoints")
                 if [ "$CLIENT_TOTAL_POINTS" -gt 0 ]; then

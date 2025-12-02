@@ -1,15 +1,10 @@
 package resource
 
 import io.ktor.http.*
-import io.ktor.server.application.Application
+import io.ktor.server.application.*
 import io.ktor.server.plugins.swagger.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import resource.agent.agentResources
-import resource.auth.authResources
-import resource.client.clientResources
-import resource.submission.submissionResources
-import resource.trash.trashResources
 
 fun Application.configureResources() {
     routing {
@@ -22,9 +17,8 @@ fun Application.configureResources() {
         swaggerUI(path = "swagger", swaggerFile = "openapi/documentation.yaml")
 
         authResources()
+        adminResources()
         clientResources()
         agentResources()
-        trashResources()
-        submissionResources()
     }
 }

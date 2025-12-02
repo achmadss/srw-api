@@ -159,7 +159,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BaseResponse'
-  /clients:
+  /admin/clients:
     get:
       summary: Get clients
       description: Retrieve a paginated list of clients. Requires admin authentication.
@@ -205,7 +205,7 @@ paths:
                 $ref: '#/components/schemas/BaseResponse'
       security:
         - bearerAuth: []
-  /clients/new:
+  /admin/clients/new:
     post:
       summary: Create new client
       description: Create a new client. Requires admin authentication.
@@ -247,50 +247,7 @@ paths:
                 $ref: '#/components/schemas/BaseResponse'
       security:
         - bearerAuth: []
-  /clients/{nfc}:
-    get:
-      summary: Get client by NFC
-      description: Retrieve client information by NFC card. Accessible by admin or the client themselves.
-      parameters:
-        - name: nfc
-          in: path
-          required: true
-          schema:
-            type: string
-          description: Client NFC identifier
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/BaseResponse'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/ClientResponse'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BaseResponse'
-        '403':
-          description: Forbidden - cannot access this client
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BaseResponse'
-        '404':
-          description: Client not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BaseResponse'
-      security:
-        - bearerAuth: []
-  /agents:
+  /admin/agents:
     get:
       summary: Get agents
       description: Retrieve a paginated list of agents. Requires admin authentication.
@@ -336,7 +293,7 @@ paths:
                 $ref: '#/components/schemas/BaseResponse'
       security:
         - bearerAuth: []
-  /agents/new:
+  /admin/agents/new:
     post:
       summary: Create new agent
       description: Create a new agent. Requires admin authentication.
@@ -378,7 +335,90 @@ paths:
                 $ref: '#/components/schemas/BaseResponse'
       security:
         - bearerAuth: []
-  /agents/{id}:
+  /agents/submissions:
+    get:
+      summary: Get agent submissions
+      description: Retrieve a paginated list of submissions assigned to the authenticated agent. Requires agent authentication.
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+          description: Page number for pagination
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+          description: Number of items per page
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BaseResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PaginatedSubmissionsResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+      security:
+        - bearerAuth: []
+  /agents/submissions/{id}:
+    get:
+      summary: Get agent submission details
+      description: Retrieve detailed information about a specific submission if it is assigned to the authenticated agent. Requires agent authentication.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Submission ID
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BaseResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/SubmissionDetailResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '403':
+          description: Forbidden - submission not assigned to you
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '404':
+          description: Submission not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+      security:
+        - bearerAuth: []
+  /admin/agents/{id}:
     get:
       summary: Get agent details
       description: Retrieve detailed information about a specific agent. Requires admin authentication.
@@ -512,10 +552,111 @@ paths:
                 $ref: '#/components/schemas/BaseResponse'
       security:
         - bearerAuth: []
-  /trash:
+  /admin/points/{clientId}:
+    get:
+      summary: Get client points ledger
+      description: Retrieve a paginated list of points transactions for a specific client. Requires admin authentication.
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Client ID
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+          description: Page number for pagination
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+          description: Number of items per page
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BaseResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PaginatedPointLedgerResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+      security:
+        - bearerAuth: []
+  /admin/points/{clientId}/claim:
+    post:
+      summary: Claim points for client
+      description: Deduct points from a client's balance (for redemption). Requires admin authentication.
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Client ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClaimPointsRequest'
+      responses:
+        '201':
+          description: Points claimed successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BaseResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PointResponse'
+        '400':
+          description: Bad request - invalid amount
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+      security:
+        - bearerAuth: []
+  /admin/trash:
     get:
       summary: Get all trash types
-      description: Retrieve all available trash types. Public endpoint.
+      description: Retrieve all available trash types. Requires admin authentication.
       responses:
         '200':
           description: Successful response
@@ -530,7 +671,15 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/TrashResponse'
-  /trash/new:
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+      security:
+        - bearerAuth: []
+  /admin/trash/new:
     post:
       summary: Create new trash type
       description: Create a new trash type. Requires admin authentication.
@@ -572,10 +721,10 @@ paths:
                 $ref: '#/components/schemas/BaseResponse'
       security:
         - bearerAuth: []
-  /trash/{name}:
+  /admin/trash/{name}:
     get:
       summary: Get trash type by name
-      description: Retrieve information about a specific trash type by name. Public endpoint.
+      description: Retrieve information about a specific trash type by name. Requires admin authentication.
       parameters:
         - name: name
           in: path
@@ -595,12 +744,20 @@ paths:
                     properties:
                       data:
                         $ref: '#/components/schemas/TrashResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
         '404':
           description: Trash type not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/BaseResponse'
+      security:
+        - bearerAuth: []
     put:
       summary: Update trash type
       description: Update trash type points per unit. Requires admin authentication.
@@ -692,10 +849,10 @@ paths:
                 $ref: '#/components/schemas/BaseResponse'
       security:
         - bearerAuth: []
-  /submissions:
+  /admin/submissions:
     get:
-      summary: Get submissions
-      description: Retrieve a paginated list of submissions. Behavior depends on user role - clients see their own submissions, agents see assigned submissions, admins see all submissions.
+      summary: Get all submissions (Admin)
+      description: Retrieve a paginated list of all submissions. Requires admin authentication.
       parameters:
         - name: page
           in: query
@@ -743,7 +900,111 @@ paths:
                 $ref: '#/components/schemas/BaseResponse'
       security:
         - bearerAuth: []
-  /submissions/new:
+  /clients/profile:
+    get:
+      summary: Get client profile
+      description: Retrieve a detailed client that belongs to the client. Requires client authentication.
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BaseResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ClientResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+      security:
+        - bearerAuth: []
+  /clients/profile/points:
+    get:
+      summary: Get client points ledger
+      description: Retrieve a paginated list of the authenticated client's points transactions. Requires client authentication.
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+          description: Page number for pagination
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+          description: Number of items per page
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BaseResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PaginatedPointLedgerResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+      security:
+        - bearerAuth: []
+  /clients/submissions:
+    get:
+      summary: Get client submissions
+      description: Retrieve a paginated list of the authenticated client's submissions. Requires client authentication.
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+          description: Page number for pagination
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+          description: Number of items per page
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BaseResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PaginatedSubmissionsResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+      security:
+        - bearerAuth: []
+  /clients/submissions/new:
     post:
       summary: Create new submission
       description: Create a new submission with uploaded images. Requires client authentication.
@@ -786,10 +1047,10 @@ paths:
                 $ref: '#/components/schemas/BaseResponse'
       security:
         - bearerAuth: []
-  /submissions/{id}:
+  /clients/submissions/{id}:
     get:
-      summary: Get submission details
-      description: Retrieve detailed information about a specific submission. Access depends on user role.
+      summary: Get client submission details
+      description: Retrieve detailed information about a specific submission if it belongs to the authenticated client. Requires client authentication.
       parameters:
         - name: id
           in: path
@@ -829,7 +1090,50 @@ paths:
                 $ref: '#/components/schemas/BaseResponse'
       security:
         - bearerAuth: []
-  /submissions/{id}/review:
+  /admin/submissions/{id}:
+    get:
+      summary: Get submission details (Admin)
+      description: Retrieve detailed information about a specific submission. Requires admin authentication.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Submission ID
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BaseResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/SubmissionDetailResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '403':
+          description: Forbidden - cannot access this submission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '404':
+          description: Submission not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+      security:
+        - bearerAuth: []
+  /admin/submissions/{id}/review:
     post:
       summary: Review submission
       description: Approve or reject a submission. Requires admin authentication.
@@ -879,7 +1183,7 @@ paths:
                 $ref: '#/components/schemas/BaseResponse'
       security:
         - bearerAuth: []
-  /submissions/{id}/assign:
+  /admin/submissions/{id}/assign:
     post:
       summary: Assign agent to submission
       description: Assign an agent to handle a submission. Requires admin authentication.
@@ -929,7 +1233,7 @@ paths:
                 $ref: '#/components/schemas/BaseResponse'
       security:
         - bearerAuth: []
-  /submissions/{id}/pickup:
+  /agents/submissions/{id}/pickup:
     post:
       summary: Confirm pickup
       description: Confirm that an agent has picked up the submission. Requires agent authentication.
@@ -979,7 +1283,7 @@ paths:
                 $ref: '#/components/schemas/BaseResponse'
       security:
         - bearerAuth: []
-  /submissions/{id}/history:
+  /admin/submissions/{id}/history:
     get:
       summary: Get submission history
       description: Retrieve the history of status changes for a submission. Requires admin authentication.
@@ -1024,7 +1328,7 @@ paths:
                 $ref: '#/components/schemas/BaseResponse'
       security:
         - bearerAuth: []
-  /submissions/{id}/ml-status:
+  /admin/submissions/{id}/ml-status:
     get:
       summary: Get ML processing status
       description: Retrieve the ML processing status for a submission. Requires admin authentication.
@@ -1067,7 +1371,7 @@ paths:
                 $ref: '#/components/schemas/BaseResponse'
       security:
         - bearerAuth: []
-  /submissions/{id}/images/{imageId}/metadata:
+  /admin/submissions/{id}/images/{imageId}/metadata:
     post:
       summary: Update metadata
       description: Update metadata for an image (replaces existing metadata). Requires admin authentication.
@@ -1196,6 +1500,38 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ClientResponse'
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
+    PointResponse:
+      type: object
+      required:
+        - id
+        - amount
+        - createdAt
+      properties:
+        id:
+          type: integer
+        amount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        submissionId:
+          type: integer
+          nullable: true
+    PaginatedPointLedgerResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/PointResponse'
         page:
           type: integer
         pageSize:
@@ -1373,6 +1709,14 @@ components:
         notes:
           type: string
           nullable: true
+    ClaimPointsRequest:
+      type: object
+      required:
+        - amount
+      properties:
+        amount:
+          type: integer
+          description: Amount of points to claim (positive integer)
     SubmissionResponse:
       type: object
       properties:
