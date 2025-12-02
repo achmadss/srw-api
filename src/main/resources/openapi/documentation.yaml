@@ -227,6 +227,51 @@ paths:
                 $ref: '#/components/schemas/BaseResponse'
       security:
         - bearerAuth: []
+  /admin/clients/{id}:
+    get:
+      tags:
+        - admin
+      summary: Get client details
+      description: Retrieve detailed information about a specific client. Requires admin authentication.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Agent ID
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BaseResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ClientResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '404':
+          description: Agent not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+      security:
+        - bearerAuth: [ ]
   /admin/clients/new:
     post:
       tags:
