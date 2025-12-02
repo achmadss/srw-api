@@ -1,8 +1,18 @@
+
 openapi: 3.0.3
 info:
   title: SRW API
   description: Smart Recycling Waste API
   version: 1.0.0
+tags:
+  - name: auth
+    description: Authentication endpoints
+  - name: admin
+    description: Admin management endpoints
+  - name: agent
+    description: Agent operations endpoints
+  - name: client
+    description: Client operations endpoints
 servers:
   - url: https://srw-api.achmad.dev
     description: Development server
@@ -24,6 +34,8 @@ paths:
                     example: "healthy"
   /auth/login/admin:
     post:
+      tags:
+        - auth
       summary: Admin login
       description: Authenticate admin user with username and password
       requestBody:
@@ -52,6 +64,8 @@ paths:
                 $ref: '#/components/schemas/BaseResponse'
   /auth/login/agent:
     post:
+      tags:
+        - auth
       summary: Agent login
       description: Authenticate agent user with username and password
       requestBody:
@@ -80,6 +94,8 @@ paths:
                 $ref: '#/components/schemas/BaseResponse'
   /auth/login/client:
     post:
+      tags:
+        - auth
       summary: Client login
       description: Authenticate client with NFC card
       requestBody:
@@ -108,6 +124,8 @@ paths:
                 $ref: '#/components/schemas/BaseResponse'
   /auth/logout:
     post:
+      tags:
+        - auth
       summary: Logout
       description: Revoke refresh token to logout user
       requestBody:
@@ -133,6 +151,8 @@ paths:
         - bearerAuth: []
   /auth/refresh:
     post:
+      tags:
+        - auth
       summary: Refresh access token
       description: Get new access token using refresh token
       requestBody:
@@ -161,6 +181,8 @@ paths:
                 $ref: '#/components/schemas/BaseResponse'
   /admin/clients:
     get:
+      tags:
+        - admin
       summary: Get clients
       description: Retrieve a paginated list of clients. Requires admin authentication.
       parameters:
@@ -207,6 +229,8 @@ paths:
         - bearerAuth: []
   /admin/clients/new:
     post:
+      tags:
+        - admin
       summary: Create new client
       description: Create a new client. Requires admin authentication.
       requestBody:
@@ -249,6 +273,8 @@ paths:
         - bearerAuth: []
   /admin/agents:
     get:
+      tags:
+        - admin
       summary: Get agents
       description: Retrieve a paginated list of agents. Requires admin authentication.
       parameters:
@@ -295,6 +321,8 @@ paths:
         - bearerAuth: []
   /admin/agents/new:
     post:
+      tags:
+        - admin
       summary: Create new agent
       description: Create a new agent. Requires admin authentication.
       requestBody:
@@ -337,6 +365,8 @@ paths:
         - bearerAuth: []
   /agents/submissions:
     get:
+      tags:
+        - agent
       summary: Get agent submissions
       description: Retrieve a paginated list of submissions assigned to the authenticated agent. Requires agent authentication.
       parameters:
@@ -377,6 +407,8 @@ paths:
         - bearerAuth: []
   /agents/submissions/{id}:
     get:
+      tags:
+        - agent
       summary: Get agent submission details
       description: Retrieve detailed information about a specific submission if it is assigned to the authenticated agent. Requires agent authentication.
       parameters:
@@ -420,6 +452,8 @@ paths:
         - bearerAuth: []
   /admin/agents/{id}:
     get:
+      tags:
+        - admin
       summary: Get agent details
       description: Retrieve detailed information about a specific agent. Requires admin authentication.
       parameters:
@@ -462,6 +496,8 @@ paths:
       security:
         - bearerAuth: []
     put:
+      tags:
+        - admin
       summary: Update agent
       description: Update agent information. Requires admin authentication.
       parameters:
@@ -516,6 +552,8 @@ paths:
       security:
         - bearerAuth: []
     delete:
+      tags:
+        - admin
       summary: Delete agent
       description: Delete an agent. Requires admin authentication.
       parameters:
@@ -554,6 +592,8 @@ paths:
         - bearerAuth: []
   /admin/points/{clientId}:
     get:
+      tags:
+        - admin
       summary: Get client points ledger
       description: Retrieve a paginated list of points transactions for a specific client. Requires admin authentication.
       parameters:
@@ -606,6 +646,8 @@ paths:
         - bearerAuth: []
   /admin/points/{clientId}/claim:
     post:
+      tags:
+        - admin
       summary: Claim points for client
       description: Deduct points from a client's balance (for redemption). Requires admin authentication.
       parameters:
@@ -655,6 +697,8 @@ paths:
         - bearerAuth: []
   /admin/trash:
     get:
+      tags:
+        - admin
       summary: Get all trash types
       description: Retrieve all available trash types. Requires admin authentication.
       responses:
@@ -681,6 +725,8 @@ paths:
         - bearerAuth: []
   /admin/trash/new:
     post:
+      tags:
+        - admin
       summary: Create new trash type
       description: Create a new trash type. Requires admin authentication.
       requestBody:
@@ -723,6 +769,8 @@ paths:
         - bearerAuth: []
   /admin/trash/{name}:
     get:
+      tags:
+        - admin
       summary: Get trash type by name
       description: Retrieve information about a specific trash type by name. Requires admin authentication.
       parameters:
@@ -759,6 +807,8 @@ paths:
       security:
         - bearerAuth: []
     put:
+      tags:
+        - admin
       summary: Update trash type
       description: Update trash type points per unit. Requires admin authentication.
       parameters:
@@ -813,6 +863,8 @@ paths:
       security:
         - bearerAuth: []
     delete:
+      tags:
+        - admin
       summary: Delete trash type
       description: Delete a trash type. Requires admin authentication.
       parameters:
@@ -851,6 +903,8 @@ paths:
         - bearerAuth: []
   /admin/submissions:
     get:
+      tags:
+        - admin
       summary: Get all submissions (Admin)
       description: Retrieve a paginated list of all submissions. Requires admin authentication.
       parameters:
@@ -902,6 +956,8 @@ paths:
         - bearerAuth: []
   /clients/profile:
     get:
+      tags:
+        - client
       summary: Get client profile
       description: Retrieve a detailed client that belongs to the client. Requires client authentication.
       responses:
@@ -926,6 +982,8 @@ paths:
         - bearerAuth: []
   /clients/profile/points:
     get:
+      tags:
+        - client
       summary: Get client points ledger
       description: Retrieve a paginated list of the authenticated client's points transactions. Requires client authentication.
       parameters:
@@ -966,6 +1024,8 @@ paths:
         - bearerAuth: []
   /clients/submissions:
     get:
+      tags:
+        - client
       summary: Get client submissions
       description: Retrieve a paginated list of the authenticated client's submissions. Requires client authentication.
       parameters:
@@ -1006,6 +1066,8 @@ paths:
         - bearerAuth: []
   /clients/submissions/new:
     post:
+      tags:
+        - client
       summary: Create new submission
       description: Create a new submission with uploaded images. Requires client authentication.
       requestBody:
@@ -1049,6 +1111,8 @@ paths:
         - bearerAuth: []
   /clients/submissions/{id}:
     get:
+      tags:
+        - client
       summary: Get client submission details
       description: Retrieve detailed information about a specific submission if it belongs to the authenticated client. Requires client authentication.
       parameters:
@@ -1092,6 +1156,8 @@ paths:
         - bearerAuth: []
   /admin/submissions/{id}:
     get:
+      tags:
+        - admin
       summary: Get submission details (Admin)
       description: Retrieve detailed information about a specific submission. Requires admin authentication.
       parameters:
@@ -1135,6 +1201,8 @@ paths:
         - bearerAuth: []
   /admin/submissions/{id}/review:
     post:
+      tags:
+        - admin
       summary: Review submission
       description: Approve or reject a submission. Requires admin authentication.
       parameters:
@@ -1185,6 +1253,8 @@ paths:
         - bearerAuth: []
   /admin/submissions/{id}/assign:
     post:
+      tags:
+        - admin
       summary: Assign agent to submission
       description: Assign an agent to handle a submission. Requires admin authentication.
       parameters:
@@ -1235,6 +1305,8 @@ paths:
         - bearerAuth: []
   /agents/submissions/{id}/pickup:
     post:
+      tags:
+        - agent
       summary: Confirm pickup
       description: Confirm that an agent has picked up the submission. Requires agent authentication.
       parameters:
@@ -1285,6 +1357,8 @@ paths:
         - bearerAuth: []
   /admin/submissions/{id}/history:
     get:
+      tags:
+        - admin
       summary: Get submission history
       description: Retrieve the history of status changes for a submission. Requires admin authentication.
       parameters:
@@ -1330,6 +1404,8 @@ paths:
         - bearerAuth: []
   /admin/submissions/{id}/ml-status:
     get:
+      tags:
+        - admin
       summary: Get ML processing status
       description: Retrieve the ML processing status for a submission. Requires admin authentication.
       parameters:
@@ -1373,6 +1449,8 @@ paths:
         - bearerAuth: []
   /admin/submissions/{id}/images/{imageId}/metadata:
     post:
+      tags:
+        - admin
       summary: Update metadata
       description: Update metadata for an image (replaces existing metadata). Requires admin authentication.
       parameters:
@@ -1917,5 +1995,5 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-security:
-  - bearerAuth: []
+  security:
+    - bearerAuth: []
