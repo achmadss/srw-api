@@ -4,7 +4,7 @@ info:
   description: Smart Recycling Waste API
   version: 1.0.0
 servers:
-  - url: http://localhost:8080
+  - url: https://srw-api.achmad.dev
     description: Development server
 paths:
   /health:
