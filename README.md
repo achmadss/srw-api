@@ -63,7 +63,7 @@ The system serves three user roles:
 **ML Processing Flow**:
 1. Client uploads images → Stored in MinIO
 2. API publishes ML job to RabbitMQ queue
-3. ML worker processes images (2-5s per image, 10% failure rate for testing)
+3. ML worker processes images
 4. ML worker publishes results to results queue
 5. API consumes results and creates metadata records
 6. Submission moves to AWAITING_REVIEW status
