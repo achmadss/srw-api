@@ -1,17 +1,25 @@
 package service
 
 import UserType
-import io.ktor.http.*
-import model.*
+import io.ktor.http.HttpStatusCode
+import model.MLStatus
+import model.SubmissionStatus
 import model.request.ManualMetadataItem
 import model.response.MLStatusResponse
 import model.response.SubmissionDetailResponse
 import model.response.SubmissionHistoryResponse
-import model.response.SubmissionResponse
 import model.response.base.BaseResponse
 import model.response.base.PaginatedResponse
+import model.toMLStatusResponse
+import model.toSubmissionDetailResponse
+import model.toSubmissionHistoryResponse
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import repository.*
+import repository.ImageRepository
+import repository.MetadataRepository
+import repository.PointRepository
+import repository.SubmissionHistoryRepository
+import repository.SubmissionRepository
+import repository.TrashRepository
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
@@ -33,7 +41,7 @@ class SubmissionService(
     fun createWithImages(
         clientId: Int,
         images: List<ImageUploadData>
-    ): Pair<HttpStatusCode, BaseResponse<SubmissionResponse>> {
+    ): Pair<HttpStatusCode, BaseResponse<SubmissionDetailResponse>> {
         return transaction {
             // Validate that at least one image is provided
             if (images.isEmpty()) {
@@ -75,7 +83,7 @@ class SubmissionService(
                     success = true,
                     code = HttpStatusCode.Created.value,
                     message = "Submission created successfully",
-                    data = submission.toSubmissionResponse()
+                    data = submission.toSubmissionDetailResponse()
                 )
             } catch (e: Exception) {
                 // If image upload fails, clean up the submission
@@ -128,7 +136,7 @@ class SubmissionService(
         page: Int,
         pageSize: Int,
         status: SubmissionStatus? = null
-    ): Pair<HttpStatusCode, BaseResponse<PaginatedResponse<SubmissionResponse>>> {
+    ): Pair<HttpStatusCode, BaseResponse<PaginatedResponse<SubmissionDetailResponse>>> {
         return transaction {
             val validPage = if (page >= 1) page else 1
             val validPageSize = if (pageSize >= 1) pageSize else 20
@@ -148,7 +156,7 @@ class SubmissionService(
                 success = true,
                 code = HttpStatusCode.OK.value,
                 data = PaginatedResponse(
-                    data = submissions.toSubmissionResponses(),
+                    data = submissions.map { it.toSubmissionDetailResponse() },
                     page = validPage,
                     pageSize = validPageSize,
                     total = total,
@@ -166,7 +174,7 @@ class SubmissionService(
         page: Int,
         pageSize: Int,
         status: SubmissionStatus? = null
-    ): Pair<HttpStatusCode, BaseResponse<PaginatedResponse<SubmissionResponse>>> {
+    ): Pair<HttpStatusCode, BaseResponse<PaginatedResponse<SubmissionDetailResponse>>> {
         return transaction {
             try {
                 val validPage = if (page >= 1) page else 1
@@ -190,7 +198,7 @@ class SubmissionService(
                     success = true,
                     code = HttpStatusCode.OK.value,
                     data = PaginatedResponse(
-                        data = submissions.toSubmissionResponses(),
+                        data = submissions.map { it.toSubmissionDetailResponse() },
                         page = validPage,
                         pageSize = validPageSize,
                         total = total,
@@ -216,7 +224,7 @@ class SubmissionService(
         page: Int,
         pageSize: Int,
         status: SubmissionStatus? = null
-    ): Pair<HttpStatusCode, BaseResponse<PaginatedResponse<SubmissionResponse>>> {
+    ): Pair<HttpStatusCode, BaseResponse<PaginatedResponse<SubmissionDetailResponse>>> {
         return transaction {
             try {
                 val validPage = if (page >= 1) page else 1
@@ -240,7 +248,7 @@ class SubmissionService(
                     success = true,
                     code = HttpStatusCode.OK.value,
                     data = PaginatedResponse(
-                        data = submissions.toSubmissionResponses(),
+                        data = submissions.map { it.toSubmissionDetailResponse() },
                         page = validPage,
                         pageSize = validPageSize,
                         total = total,
@@ -267,7 +275,7 @@ class SubmissionService(
         approved: Boolean,
         rejectionReason: String? = null,
         adminNotes: String? = null
-    ): Pair<HttpStatusCode, BaseResponse<SubmissionResponse>> {
+    ): Pair<HttpStatusCode, BaseResponse<SubmissionDetailResponse>> {
         return transaction {
             try {
                 val submission = submissionRepository.findById(id)
@@ -317,14 +325,10 @@ class SubmissionService(
 
                 // Calculate and store total points if approved
                 if (approved) {
-                    val totalPoints = calculateTotalPoints(id)
-                    submissionRepository.updateTotalPoints(id, totalPoints)
-
-                    // Create point record for the client
                     pointRepository.create(
                         clientId = submission.client.id.value,
                         submissionId = id,
-                        amount = totalPoints
+                        amount = submission.calculateTotalPoints()
                     )
                 }
 
@@ -338,7 +342,7 @@ class SubmissionService(
                     comment = if (approved) adminNotes else rejectionReason
                 )
 
-                val updatedSubmission = submissionRepository.findById(id)?.toSubmissionResponse()!!
+                val updatedSubmission = submissionRepository.findById(id)?.toSubmissionDetailResponse()!!
                 HttpStatusCode.OK to BaseResponse(
                     success = true,
                     code = HttpStatusCode.OK.value,
@@ -363,7 +367,7 @@ class SubmissionService(
         id: Int,
         adminId: Int,
         agentId: Int
-    ): Pair<HttpStatusCode, BaseResponse<SubmissionResponse>> {
+    ): Pair<HttpStatusCode, BaseResponse<SubmissionDetailResponse>> {
         return transaction {
             try {
                 val submission = submissionRepository.findById(id)
@@ -407,7 +411,7 @@ class SubmissionService(
                     comment = "Agent assigned: $agentId, pickup location: $pickupLocation"
                 )
 
-                val updatedSubmission = submissionRepository.findById(id)?.toSubmissionResponse()!!
+                val updatedSubmission = submissionRepository.findById(id)?.toSubmissionDetailResponse()!!
                 HttpStatusCode.OK to BaseResponse(
                     success = true,
                     code = HttpStatusCode.OK.value,
@@ -432,7 +436,7 @@ class SubmissionService(
         id: Int,
         agentId: Int,
         notes: String? = null
-    ): Pair<HttpStatusCode, BaseResponse<SubmissionResponse>> {
+    ): Pair<HttpStatusCode, BaseResponse<SubmissionDetailResponse>> {
         return transaction {
             try {
                 val submission = submissionRepository.findById(id)
@@ -492,7 +496,7 @@ class SubmissionService(
                     comment = "Submission completed"
                 )
 
-                val updatedSubmission = submissionRepository.findById(id)?.toSubmissionResponse()!!
+                val updatedSubmission = submissionRepository.findById(id)?.toSubmissionDetailResponse()!!
                 HttpStatusCode.OK to BaseResponse(
                     success = true,
                     code = HttpStatusCode.OK.value,
@@ -504,66 +508,6 @@ class SubmissionService(
                     success = false,
                     code = HttpStatusCode.InternalServerError.value,
                     message = e.message ?: "Failed to confirm pickup",
-                    data = null
-                )
-            }
-        }
-    }
-
-    /**
-     * Update ML processing status
-     */
-    fun updateMLStatus(
-        id: Int,
-        newStatus: SubmissionStatus
-    ): Pair<HttpStatusCode, BaseResponse<SubmissionResponse>> {
-        return transaction {
-            try {
-                val submission = submissionRepository.findById(id)
-                    ?: return@transaction HttpStatusCode.NotFound to BaseResponse(
-                        success = false,
-                        code = HttpStatusCode.NotFound.value,
-                        message = "Submission not found",
-                        data = null
-                    )
-
-                val currentStatus = submission.getStatus()
-
-                // Validate status transition
-                if (!currentStatus.canTransitionTo(newStatus)) {
-                    return@transaction HttpStatusCode.BadRequest to BaseResponse(
-                        success = false,
-                        code = HttpStatusCode.BadRequest.value,
-                        message = "Invalid status transition from $currentStatus to $newStatus",
-                        data = null
-                    )
-                }
-
-                val now = Clock.System.now()
-                submissionRepository.updateStatus(id, newStatus, now)
-
-                // Create history entry
-                submissionHistoryRepository.create(
-                    submissionId = id,
-                    oldStatus = currentStatus,
-                    newStatus = newStatus,
-                    changedBy = 0, // System user
-                    userType = "system",
-                    comment = "ML processing status updated"
-                )
-
-                val updatedSubmission = submissionRepository.findById(id)?.toSubmissionResponse()!!
-                HttpStatusCode.OK to BaseResponse(
-                    success = true,
-                    code = HttpStatusCode.OK.value,
-                    message = "Status updated successfully",
-                    data = updatedSubmission
-                )
-            } catch (e: Exception) {
-                HttpStatusCode.InternalServerError to BaseResponse(
-                    success = false,
-                    code = HttpStatusCode.InternalServerError.value,
-                    message = e.message ?: "Failed to update status",
                     data = null
                 )
             }
@@ -591,26 +535,6 @@ class SubmissionService(
                     data = null
                 )
             }
-        }
-    }
-
-    // ==================== Helper Methods ====================
-
-    /**
-     * Calculate total points for a submission based on metadata
-     */
-    private fun calculateTotalPoints(submissionId: Int): Int {
-        val submission = submissionRepository.findById(submissionId) ?: return 0
-        return transaction {
-            var totalPoints = 0
-            submission.images.forEach { image ->
-                image.metadata.forEach { metadata ->
-                    val trash = metadata.trash
-                    totalPoints += metadata.amount * trash.pointsPerUnit
-                }
-            }
-
-            totalPoints
         }
     }
 
@@ -680,7 +604,7 @@ class SubmissionService(
 
                 // Create new metadata records
                 metadata.forEach { item ->
-                    val trash = trashRepository.findByName(item.trashTypeName)
+                    trashRepository.findByName(item.trashTypeName)
                         ?: return@transaction HttpStatusCode.BadRequest to BaseResponse(
                             success = false,
                             code = HttpStatusCode.BadRequest.value,

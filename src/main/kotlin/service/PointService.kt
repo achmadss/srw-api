@@ -13,7 +13,11 @@ import kotlin.time.ExperimentalTime
 class PointService(
     private val pointRepository: PointRepository,
 ) {
-    fun getPointLedgerByClientId(clientId: Int, page: Int, pageSize: Int): Pair<HttpStatusCode, BaseResponse<PaginatedResponse<PointResponse>>> {
+    fun getPointLedgerByClientId(
+        clientId: Int,
+        page: Int,
+        pageSize: Int
+    ): Pair<HttpStatusCode, BaseResponse<PaginatedResponse<PointResponse>>> {
         return transaction {
             try {
                 val validPage = if (page >= 1) page else 1
@@ -62,7 +66,10 @@ class PointService(
         }
     }
 
-    fun claimPointsByClientId(clientId: Int, amount: Int): Pair<HttpStatusCode, BaseResponse<PointResponse>> {
+    fun claimPointsByClientId(
+        clientId: Int,
+        amount: Int
+    ): Pair<HttpStatusCode, BaseResponse<PointResponse>> {
         return transaction {
             try {
                 if (amount <= 0) {

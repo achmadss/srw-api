@@ -40,11 +40,6 @@ class PointRepository {
         return client.points.toList()
     }
 
-    fun findBySubmission(submissionId: Int): List<Point> {
-        val submission = Submission.findById(submissionId) ?: throw IllegalArgumentException("Submission with id $submissionId not found")
-        return submission.points.toList()
-    }
-
     fun getClientTotalPoints(clientId: Int): Int {
         val client = Client.findById(clientId) ?: throw IllegalArgumentException("Client with id $clientId not found")
         return client.points.sumOf { it.amount }
