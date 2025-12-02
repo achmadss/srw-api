@@ -900,6 +900,70 @@ paths:
                 $ref: '#/components/schemas/BaseResponse'
       security:
         - bearerAuth: []
+  /clients/profile:
+    get:
+      summary: Get client profile
+      description: Retrieve a detailed client that belongs to the client. Requires client authentication.
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BaseResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ClientResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+      security:
+        - bearerAuth: []
+  /clients/profile/points:
+    get:
+      summary: Get client points ledger
+      description: Retrieve a paginated list of the authenticated client's points transactions. Requires client authentication.
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+          description: Page number for pagination
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+          description: Number of items per page
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BaseResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PaginatedPointLedgerResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+      security:
+        - bearerAuth: []
   /clients/submissions:
     get:
       summary: Get client submissions
@@ -1020,46 +1084,6 @@ paths:
                 $ref: '#/components/schemas/BaseResponse'
         '404':
           description: Submission not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BaseResponse'
-      security:
-        - bearerAuth: []
-  /clients/submissions/points:
-    get:
-      summary: Get client points ledger
-      description: Retrieve a paginated list of the authenticated client's points transactions. Requires client authentication.
-      parameters:
-        - name: page
-          in: query
-          schema:
-            type: integer
-            default: 1
-            minimum: 1
-          description: Page number for pagination
-        - name: pageSize
-          in: query
-          schema:
-            type: integer
-            default: 20
-            minimum: 1
-            maximum: 100
-          description: Number of items per page
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/BaseResponse'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/PaginatedPointLedgerResponse'
-        '401':
-          description: Unauthorized
           content:
             application/json:
               schema:

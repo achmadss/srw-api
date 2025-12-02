@@ -350,7 +350,7 @@ else
     RANDOM_IMAGE=${IMAGE_FILES[$((RANDOM % ${#IMAGE_FILES[@]}))]}
     run_test "Upload Test Image ($RANDOM_IMAGE)"
     if [ -f "$RANDOM_IMAGE" ]; then
-        echo -e "${BLUE}  → curl -s -w \"\\n%{http_code}\" -H \"Authorization: Bearer $CLIENT_TOKEN\" -F \"image=@$RANDOM_IMAGE\" \"$API_URL/submissions/new\"${NC}" >&2
+        echo -e "${BLUE}  → curl -s -w \"\\n%{http_code}\" -H \"Authorization: Bearer $CLIENT_TOKEN\" -F \"image=@$RANDOM_IMAGE\" \"$API_URL/clients/submissions/new\"${NC}" >&2
         UPLOAD_RESPONSE=$(curl -s -w "\n%{http_code}" \
             -H "Authorization: Bearer $CLIENT_TOKEN" \
             -F "image=@$RANDOM_IMAGE" \
@@ -393,7 +393,7 @@ if [ -n "$SUBMISSION_ID" ]; then
 
     while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
         if [ $ATTEMPT -eq 0 ]; then
-            echo -e "${BLUE}  → curl -s -H \"Authorization: Bearer $ADMIN_TOKEN\" \"$API_URL/submissions/$SUBMISSION_ID\"${NC}" >&2
+            echo -e "${BLUE}  → curl -s -H \"Authorization: Bearer $ADMIN_TOKEN\" \"$API_URL/admin/submissions/$SUBMISSION_ID\"${NC}" >&2
         fi
         SUBMISSION_RESPONSE=$(curl -s -H "Authorization: Bearer $ADMIN_TOKEN" "$API_URL/admin/submissions/$SUBMISSION_ID")
         STATUS=$(json_value "$SUBMISSION_RESPONSE" "status")

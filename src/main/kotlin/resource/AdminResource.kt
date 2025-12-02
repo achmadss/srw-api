@@ -27,6 +27,9 @@ class AdminResource {
     ) {
         @Resource("new")
         class New(val parent: Clients = Clients())
+
+        @Resource("{id}")
+        class ById(val parent: Clients = Clients(), val id: Int)
     }
 
     @Resource("agents")
@@ -124,6 +127,10 @@ fun Route.adminResources() {
                 nfc = body.nfc,
                 address = body.address
             )
+            call.respond(code, response)
+        }
+        get<AdminResource.Clients.ById> { resource ->
+            val (code, response) = clientService.getById(resource.id)
             call.respond(code, response)
         }
 

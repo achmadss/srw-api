@@ -180,34 +180,31 @@ docker-compose up -d postgres minio rabbitmq ml-service
 
 Base URL: `http://localhost:8080`
 
-### Authentication
+### Authentication Endpoints
 
-All roles have identical auth flow with different login credentials:
+- `GET /health` - Health check endpoint
 
-**Admin**
-- `POST /auth/login/admin` - Login with username/password
+- `POST /auth/login/admin` - Admin login with username/password
   ```json
   {"username": "admin", "password": "admin"}
   ```
 
-**Agent**
-- `POST /auth/login/agent` - Login with username/password
+- `POST /auth/login/agent` - Agent login with username/password
   ```json
   {"username": "agent1", "password": "password"}
   ```
 
-**Client**
-- `POST /auth/login/client` - Login with NFC card
+- `POST /auth/login/client` - Client login with NFC card
   ```json
   {"nfc": "NFC123456"}
   ```
 
-**Common Auth Endpoints**
-- `POST /auth/refresh` - Refresh access token
+- `POST /auth/logout` - Logout (revoke refresh token)
   ```json
   {"refreshToken": "..."}
   ```
-- `POST /auth/logout` - Revoke refresh token
+
+- `POST /auth/refresh` - Refresh access token
   ```json
   {"refreshToken": "..."}
   ```
@@ -216,108 +213,11 @@ All roles have identical auth flow with different login credentials:
 - Access tokens: 15 minutes expiry
 - Refresh tokens: 30 days expiry, stored in DB
 
-### Submissions
+### Admin-Only Endpoints
 
-#### Client Endpoints
-
-- `POST /submissions/new` - Create submission with images (multipart/form-data)
-  - Auth: CLIENT
-  - Body: Multipart with file uploads (field name: any)
-  - Response: Submission created, ML job queued
-
-- `GET /submissions?status={status}` - List own submissions
-  - Auth: CLIENT
-  - Query: `status` (optional) - Filter by status
-  - Response: List of submissions
-
-- `GET /submissions/{id}` - Get submission details
-  - Auth: CLIENT
-  - Authorization: Own submissions only
-  - Response: Submission with images and metadata
-
-- `GET /submissions/{id}/ml-status` - Get ML processing status
-  - Auth: CLIENT
-  - Authorization: Own submissions only
-  - Response: Per-image ML status (PENDING/PROCESSING/COMPLETED/FAILED)
-
-#### Admin Endpoints
-
-- `GET /submissions?page={page}&pageSize={size}&status={status}` - List all submissions
-  - Auth: ADMIN
-  - Query: `page` (default: 1), `pageSize` (default: 20), `status` (optional)
-  - Response: Paginated submissions
-
-- `GET /submissions/{id}` - Get submission details
-  - Auth: ADMIN
-  - Response: Full submission details with images and metadata
-
-- `POST /submissions/{id}/review` - Review submission
-  - Auth: ADMIN
-  - Body:
-    ```json
-    {
-      "approved": true,
-      "rejectionReason": null,
-      "adminNotes": "Looks good"
-    }
-    ```
-
-- `POST /submissions/{id}/assign` - Assign agent
-  - Auth: ADMIN
-  - Body:
-    ```json
-    {
-      "agentId": 1
-    }
-    ```
-  - Note: Pickup location automatically set to client's address
-
-- `GET /submissions/{id}/history` - Get status change history
-  - Auth: ADMIN
-  - Response: Audit trail of all status transitions
-
-- `GET /submissions/{id}/ml-status` - Get ML processing status
-  - Auth: ADMIN
-  - Response: Per-image ML status
-
-- `POST /submissions/{id}/images/{imageId}/metadata` - Manually update metadata
-  - Auth: ADMIN
-  - Use case: ML processing failed, manual classification needed
-  - Body:
-    ```json
-    {
-      "metadata": [
-        {"trashType": "plastic", "amount": 5},
-        {"trashType": "metal", "amount": 2}
-      ]
-    }
-    ```
-
-#### Agent Endpoints
-
-- `GET /submissions?status={status}` - List assigned submissions
-  - Auth: AGENT
-  - Query: `status` (optional)
-  - Response: Submissions assigned to this agent
-
-- `GET /submissions/{id}` - Get submission details
-  - Auth: AGENT
-  - Authorization: Assigned submissions only
-  - Response: Submission details
-
-- `POST /submissions/{id}/pickup` - Confirm pickup
-  - Auth: AGENT
-  - Body:
-    ```json
-    {
-      "notes": "Picked up at 10:00 AM"
-    }
-    ```
-
-### Clients
-
-- `GET /clients?page={page}&pageSize={size}` - List clients (ADMIN)
-- `POST /clients/new` - Create client (ADMIN)
+**Client Management:**
+- `GET /admin/clients` - Get paginated list of clients
+- `POST /admin/clients/new` - Create new client
   ```json
   {
     "name": "John Doe",
@@ -325,13 +225,10 @@ All roles have identical auth flow with different login credentials:
     "address": "123 Main St"
   }
   ```
-- `GET /clients/{nfc}` - Get client by NFC (ADMIN, CLIENT)
-  - Response includes `totalPoints` field
 
-### Agents
-
-- `GET /agents?page={page}&pageSize={size}` - List agents (ADMIN)
-- `POST /agents/new` - Create agent (ADMIN)
+**Agent Management:**
+- `GET /admin/agents` - Get paginated list of agents
+- `POST /admin/agents/new` - Create new agent
   ```json
   {
     "name": "Agent Smith",
@@ -339,24 +236,74 @@ All roles have identical auth flow with different login credentials:
     "password": "password123"
   }
   ```
-- `GET /agents/{id}` - Get agent (ADMIN)
-- `PUT /agents/{id}` - Update agent (ADMIN)
-- `DELETE /agents/{id}` - Delete agent (ADMIN)
+- `GET /admin/agents/{id}` - Get agent details
+- `PUT /admin/agents/{id}` - Update agent
+- `DELETE /admin/agents/{id}` - Delete agent
 
-### Trash Types
+**Points Management:**
+- `GET /admin/points/{clientId}` - Get client points ledger
+- `POST /admin/points/{clientId}/claim` - Claim points for client (deduct from balance)
 
-- `GET /trash` - List all trash types (PUBLIC)
-  - Response includes trash types and points per unit
-- `GET /trash/{name}` - Get trash type by name (PUBLIC)
-- `POST /trash/new` - Create trash type (ADMIN)
+**Trash Types Management:**
+- `GET /admin/trash` - Get all trash types
+- `POST /admin/trash/new` - Create new trash type
   ```json
   {
     "name": "plastic",
     "pointsPerUnit": 10
   }
   ```
-- `PUT /trash/{name}` - Update trash type (ADMIN)
-- `DELETE /trash/{name}` - Delete trash type (ADMIN)
+- `GET /admin/trash/{name}` - Get trash type by name
+- `PUT /admin/trash/{name}` - Update trash type points
+- `DELETE /admin/trash/{name}` - Delete trash type
+
+**Submission Management:**
+- `GET /admin/submissions` - Get all submissions (paginated)
+- `GET /admin/submissions/{id}` - Get submission details
+- `POST /admin/submissions/{id}/review` - Review submission (approve/reject)
+  ```json
+  {
+    "approved": true,
+    "rejectionReason": null,
+    "adminNotes": "Looks good"
+  }
+  ```
+- `POST /admin/submissions/{id}/assign` - Assign agent to submission
+  ```json
+  {
+    "agentId": 1
+  }
+  ```
+- `GET /admin/submissions/{id}/history` - Get submission status history
+- `GET /admin/submissions/{id}/ml-status` - Get ML processing status
+- `POST /admin/submissions/{id}/images/{imageId}/metadata` - Manually update image metadata
+  ```json
+  {
+    "metadata": [
+      {"trashType": "plastic", "amount": 5},
+      {"trashType": "metal", "amount": 2}
+    ]
+  }
+  ```
+
+### Client-Only Endpoints
+
+- `GET /clients/profile` - Get client profile
+- `GET /clients/submissions` - Get client's submissions (paginated)
+- `POST /clients/submissions/new` - Create new submission with images (multipart/form-data)
+- `GET /clients/submissions/{id}` - Get submission details (own submissions only)
+- `GET /clients/profile/points` - Get client's points ledger
+
+### Agent-Only Endpoints
+
+- `GET /agents/submissions` - Get assigned submissions (paginated)
+- `GET /agents/submissions/{id}` - Get submission details (assigned only)
+- `POST /agents/submissions/{id}/pickup` - Confirm pickup of assigned submission
+  ```json
+  {
+    "notes": "Picked up at 10:00 AM"
+  }
+  ```
 
 ## API Documentation
 
@@ -634,7 +581,7 @@ The application provides comprehensive monitoring capabilities:
 
 1. Create client:
    ```bash
-   POST /clients/new
+   POST /admin/clients/new
    {"name": "Test User", "nfc": "TEST001", "address": "123 Test St"}
    ```
 
@@ -646,37 +593,32 @@ The application provides comprehensive monitoring capabilities:
 
 3. Upload images (multipart):
    ```bash
-   POST /submissions/new
+   POST /clients/submissions/new
    # Upload 1-3 images
    ```
 
-4. Monitor ML processing:
+4. Admin reviews (login as admin first):
    ```bash
-   GET /submissions/{id}/ml-status
-   ```
-
-5. Admin reviews (login as admin first):
-   ```bash
-   POST /submissions/{id}/review
+   POST /admin/submissions/{id}/review
    {"approved": true, "adminNotes": "Good submission"}
    ```
 
-6. Admin assigns agent:
+5. Admin assigns agent:
    ```bash
-   POST /submissions/{id}/assign
+   POST /admin/submissions/{id}/assign
    {"agentId": 1}
    ```
 
-7. Agent confirms pickup:
+6. Agent confirms pickup:
    ```bash
-   POST /submissions/{id}/pickup
+   POST /agents/submissions/{id}/pickup
    {"notes": "Picked up successfully"}
    ```
 
-8. Check client points:
+7. Check client points:
    ```bash
-   GET /clients/TEST001
-   # Response includes totalPoints
+   GET /clients/submissions/points
+   # Response includes points ledger
    ```
 
 ## Resources

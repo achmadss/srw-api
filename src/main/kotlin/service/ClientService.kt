@@ -81,6 +81,26 @@ class ClientService(
         }
     }
 
+    fun getById(id: Int): Pair<HttpStatusCode, BaseResponse<ClientResponse?>> {
+        return transaction {
+            val client = clientRepository.findById(id)
+            if (client != null) {
+                val totalPoints = pointRepository.getClientTotalPoints(client.id.value)
+                return@transaction HttpStatusCode.OK to BaseResponse(
+                    success = true,
+                    code = HttpStatusCode.OK.value,
+                    data = client.toClientResponse(totalPoints)
+                )
+            }
+            return@transaction HttpStatusCode.BadRequest to BaseResponse(
+                success = false,
+                code = HttpStatusCode.BadRequest.value,
+                message = "Client with id $id was not found",
+                data = null,
+            )
+        }
+    }
+
     fun getByNfc(nfc: String): Pair<HttpStatusCode, BaseResponse<ClientResponse?>> {
         return transaction {
             val client = clientRepository.findByNfc(nfc)

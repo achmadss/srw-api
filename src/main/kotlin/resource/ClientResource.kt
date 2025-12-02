@@ -12,7 +12,10 @@ import io.ktor.server.resources.*
 import io.ktor.server.resources.post
 import io.ktor.server.response.*
 import io.ktor.server.routing.Route
+import io.ktor.utils.io.jvm.javaio.toInputStream
+import java.io.ByteArrayInputStream
 import model.response.base.BaseResponse
+import service.ClientService
 import service.ImageUploadData
 import service.PointService
 import service.SubmissionService
@@ -31,10 +34,12 @@ class ClientResource {
 
         @Resource("{id}")
         class ById(val parent: Submissions = Submissions(), val id: Int)
-
+    }
+    @Resource("profile")
+    class Profile(val parent: ClientResource = ClientResource()) {
         @Resource("points")
         class Points(
-            val parent: Submissions = Submissions(),
+            val parent: Profile = Profile(),
             val page: Int = 1,
             val pageSize: Int = 20
         )
@@ -42,10 +47,18 @@ class ClientResource {
 }
 
 fun Route.clientResources() {
+    val clientService by injectLazy<ClientService>()
     val pointService by injectLazy<PointService>()
     val submissionService by injectLazy<SubmissionService>()
     authenticate(JwtAuth.CLIENT) {
-        get<ClientResource.Submissions.Points> { resource ->
+        get<ClientResource.Profile> {
+            val principal = call.principal<JWTPrincipal>()!!
+            val clientId = principal.payload.getClaim("userId").asInt()
+            val (code, response) = clientService.getById(clientId)
+            call.respond(code, response)
+        }
+
+        get<ClientResource.Profile.Points> { resource ->
             val principal = call.principal<JWTPrincipal>()!!
             val clientId = principal.payload.getClaim("userId").asInt()
             val (code, response) = pointService.getPointLedgerByClientId(clientId, resource.page, resource.pageSize)
@@ -57,42 +70,56 @@ fun Route.clientResources() {
             val principal = call.principal<JWTPrincipal>()!!
             val clientId = principal.payload.getClaim("userId").asInt()
 
-            // Collect image uploads from multipart data
             val images = mutableListOf<ImageUploadData>()
             val multipart = call.receiveMultipart()
+
+            // PNG file signature (first 8 bytes)
+            val pngHeader = byteArrayOf(
+                0x89.toByte(), 0x50, 0x4E, 0x47,
+                0x0D, 0x0A, 0x1A, 0x0A
+            )
 
             multipart.forEachPart { part ->
                 when (part) {
                     is PartData.FileItem -> {
                         val fileName = part.originalFileName ?: "unknown"
-                        val contentType = part.contentType?.toString() ?: "application/octet-stream"
 
-                        // Get input stream and size
-                        val inputStream = part.streamProvider()
-                        val bytes = inputStream.readBytes()
+                        // Read all file bytes once
+                        val bytes = part.provider().toInputStream().readBytes()
                         val size = bytes.size.toLong()
+
+                        // Validate header: must match real PNG signature
+                        val header = bytes.take(8).toByteArray()
+                        val isPng = header.contentEquals(pngHeader)
+
+                        if (!isPng) {
+                            part.dispose()
+                            return@forEachPart
+                        }
 
                         images.add(
                             ImageUploadData(
                                 inputStream = bytes.inputStream(),
                                 fileName = fileName,
-                                contentType = contentType,
+                                contentType = "image/png",
                                 size = size
                             )
                         )
+
+                        part.dispose()
                     }
+
                     else -> part.dispose()
                 }
             }
 
-            // Validate that at least one image was uploaded
             if (images.isEmpty()) {
                 call.respond(
                     HttpStatusCode.BadRequest,
                     BaseResponse(
                         success = false,
                         code = 400,
-                        message = "At least one image is required",
+                        message = "At least one valid PNG image is required",
                         data = null
                     )
                 )
