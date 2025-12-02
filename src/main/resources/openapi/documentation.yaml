@@ -1139,7 +1139,7 @@ paths:
                   - type: object
                     properties:
                       data:
-                        $ref: '#/components/schemas/SubmissionResponse'
+                        $ref: '#/components/schemas/SubmissionDetailResponse'
         '400':
           description: Bad request - no images provided or invalid data
           content:
@@ -1801,7 +1801,7 @@ components:
         data:
           type: array
           items:
-            $ref: '#/components/schemas/SubmissionResponse'
+            $ref: '#/components/schemas/SubmissionDetailResponse'
         page:
           type: integer
         pageSize:
@@ -1840,59 +1840,6 @@ components:
         amount:
           type: integer
           description: Amount of points to claim (positive integer)
-    SubmissionResponse:
-      type: object
-      properties:
-        id:
-          type: integer
-        clientId:
-          type: integer
-        clientName:
-          type: string
-        agentId:
-          type: integer
-          nullable: true
-        agentName:
-          type: string
-          nullable: true
-        status:
-          $ref: '#/components/schemas/SubmissionStatus'
-        rejectionReason:
-          type: string
-          nullable: true
-        adminNotes:
-          type: string
-          nullable: true
-        pickupLocation:
-          type: string
-          nullable: true
-        totalPoints:
-          type: integer
-          nullable: true
-        imageCount:
-          type: integer
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-        processedAt:
-          type: string
-          format: date-time
-          nullable: true
-        reviewedAt:
-          type: string
-          format: date-time
-          nullable: true
-        assignedAt:
-          type: string
-          format: date-time
-          nullable: true
-        pickedUpAt:
-          type: string
-          format: date-time
-          nullable: true
     SubmissionDetailResponse:
       type: object
       properties:
