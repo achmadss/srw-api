@@ -41,7 +41,13 @@ fun Application.configureSecurity() {
                 }
             }
             challenge { _, _ ->
-                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Token is not valid or has expired"))
+                val (code, response) = HttpStatusCode.Unauthorized to BaseResponse(
+                    success = false,
+                    code = HttpStatusCode.Unauthorized.value,
+                    message = "Token is not valid or has expired",
+                    data = null
+                )
+                call.respond(code, response)
             }
         }
 
@@ -64,7 +70,13 @@ fun Application.configureSecurity() {
                 }
             }
             challenge { _, _ ->
-                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Token is not valid or has expired"))
+                val (code, response) = HttpStatusCode.Unauthorized to BaseResponse(
+                    success = false,
+                    code = HttpStatusCode.Unauthorized.value,
+                    message = "Token is not valid or has expired",
+                    data = null
+                )
+                call.respond(code, response)
             }
         }
 
@@ -87,7 +99,13 @@ fun Application.configureSecurity() {
                 }
             }
             challenge { _, _ ->
-                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Token is not valid or has expired"))
+                val (code, response) = HttpStatusCode.Unauthorized to BaseResponse(
+                    success = false,
+                    code = HttpStatusCode.Unauthorized.value,
+                    message = "Token is not valid or has expired",
+                    data = null
+                )
+                call.respond(code, response)
             }
         }
     }
