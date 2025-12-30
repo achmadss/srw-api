@@ -10,6 +10,7 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.response.*
+import model.response.base.BaseResponse
 
 fun Application.configureSecurity() {
     val adminSecret = getRequiredEnv(Env.ADMIN_JWT_SECRET)
