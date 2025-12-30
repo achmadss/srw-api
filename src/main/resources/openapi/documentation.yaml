@@ -239,7 +239,7 @@ paths:
           required: true
           schema:
             type: integer
-          description: Agent ID
+          description: Client ID
       responses:
         '200':
           description: Successful response
@@ -265,13 +265,108 @@ paths:
               schema:
                 $ref: '#/components/schemas/BaseResponse'
         '404':
-          description: Agent not found
+          description: Client not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/BaseResponse'
       security:
         - bearerAuth: [ ]
+    put:
+      tags:
+        - admin
+      summary: Update client
+      description: Update client information. Requires admin authentication.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Client ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateClientRequest'
+      responses:
+        '200':
+          description: Client updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BaseResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ClientResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '404':
+          description: Client not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+      security:
+        - bearerAuth: []
+    delete:
+      tags:
+        - admin
+      summary: Delete client
+      description: Delete a client. Requires admin authentication.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Client ID
+      responses:
+        '200':
+          description: Client deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '404':
+          description: Client not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+      security:
+        - bearerAuth: []
   /admin/clients/new:
     post:
       tags:
@@ -1596,6 +1691,15 @@ components:
         nfc:
           type: string
         name:
+          type: string
+        address:
+          type: string
+    UpdateClientRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        nfc:
           type: string
         address:
           type: string

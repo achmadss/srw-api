@@ -134,6 +134,20 @@ fun Route.adminResources() {
             val (code, response) = clientService.getById(resource.id)
             call.respond(code, response)
         }
+        put<AdminResource.Clients.ById> { resource ->
+            val request = call.receive<UpdateClientRequest>()
+            val (code, response) = clientService.update(
+                id = resource.id,
+                nfc = request.nfc,
+                name = request.name,
+                address = request.address
+            )
+            call.respond(code, response)
+        }
+        delete<AdminResource.Clients.ById> { resource ->
+            val (code, response) = clientService.delete(resource.id)
+            call.respond(code, response)
+        }
 
         // Agent management
         get<AdminResource.Agents> { resource ->

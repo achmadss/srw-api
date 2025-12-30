@@ -122,4 +122,80 @@ class ClientService(
         }
     }
 
+    /** 
+     * Update client
+     */
+    fun update(
+        id: Int, 
+        nfc: String?,
+        name: String?, 
+        address: String?
+    ): Pair<HttpStatusCode, BaseResponse<ClientResponse?>> {
+        return transaction {
+            try {
+                val client = clientRepository.update(
+                    id = id,
+                    name = name,
+                    nfc = nfc,
+                    address = address
+                )
+
+                val totalPoints = pointRepository.getClientTotalPoints(client.id.value)
+
+                HttpStatusCode.OK to BaseResponse(
+                    success = true,
+                    code = HttpStatusCode.OK.value,
+                    message = "Client updated successfully",
+                    data = client.toClientResponse(totalPoints)
+                )
+            } catch (e: IllegalArgumentException) {
+                HttpStatusCode.BadRequest to BaseResponse(
+                    success = false,
+                    code = HttpStatusCode.BadRequest.value,
+                    message = e.message ?: "Failed to update client",
+                    data = null
+                )
+            } catch (e: Exception) {
+                HttpStatusCode.InternalServerError to BaseResponse(
+                    success = false,
+                    code = HttpStatusCode.InternalServerError.value,
+                    message = "Internal server error",
+                    data = null
+                )
+            }
+        }
+    }
+
+    /**
+     * Delete client
+     */
+    fun delete(id: Int): Pair<HttpStatusCode, BaseResponse<Unit>> {
+        return transaction {
+            try {
+                clientRepository.delete(id)
+
+                HttpStatusCode.OK to BaseResponse(
+                    success = true,
+                    code = HttpStatusCode.OK.value,
+                    message = "Client deleted successfully",
+                    data = null
+                )
+            } catch (e: IllegalArgumentException) {
+                HttpStatusCode.NotFound to BaseResponse(
+                    success = false,
+                    code = HttpStatusCode.NotFound.value,
+                    message = e.message ?: "Client not found",
+                    data = null
+                )
+            } catch (e: Exception) {
+                HttpStatusCode.InternalServerError to BaseResponse(
+                    success = false,
+                    code = HttpStatusCode.InternalServerError.value,
+                    message = "Internal server error",
+                    data = null
+                )
+            }
+        }
+    }
+
 }
