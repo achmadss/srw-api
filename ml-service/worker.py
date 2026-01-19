@@ -21,6 +21,12 @@ ML_QUEUE = "ml_processing_queue"
 RESULTS_QUEUE = "ml_results_queue"
 ACK_QUEUE = "ml_job_ack_queue"
 
+# --- MINIO ENVIRONMENT ---
+MINIO_HOSTNAME = os.getenv("MINIO_HOSTNAME", "http://minio:9000")
+MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
+MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "minioadmin")
+MINIO_BUCKET = os.getenv("MINIO_BUCKET", "srw-images")
+
 MODEL_PATH = "./best.onnx"
 
 print(f"🔍 Loading ONNX model from {MODEL_PATH} ...")
@@ -69,7 +75,9 @@ def postprocess(outputs, score_threshold=0.5):
     return results
 
 
-def process_image(image_id: str, image_url: str, trash_config: TrashTypesConfig) -> Dict:
+def process_image(image_id: str, trash_config: TrashTypesConfig) -> Dict:
+    # Construct URL from MINIO_HOSTNAME and image_id (objectKey)
+    image_url = f"{MINIO_HOSTNAME}/{MINIO_BUCKET}/{image_id}"
     print(f"Processing image {image_id}: {image_url}")
 
     try:
@@ -129,7 +137,7 @@ def process_ml_job(job_data: Dict, trash_config: TrashTypesConfig) -> Dict:
     results = []
     for idx, image in enumerate(images, 1):
         print(f"[{idx}/{len(images)}] Processing image...")
-        result = process_image(image["id"], image["url"], trash_config)
+        result = process_image(image["id"], trash_config)
         results.append(result)
 
     successful = sum(1 for r in results if r["success"])

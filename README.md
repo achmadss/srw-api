@@ -343,9 +343,11 @@ The API provides comprehensive documentation through multiple channels:
 - createdAt, updatedAt, processedAt, reviewedAt, assignedAt, pickedUpAt
 
 **images**
-- id (UUID string), url, submissionId (FK)
+- id (UUID string, PK), submissionId (FK)
 - mlStatus, mlError
 - createdAt, updatedAt
+
+**Note**: Image URLs are generated dynamically at request time using presigned URLs with the `MINIO_PUBLIC_ENDPOINT` configuration. The `images` table no longer stores full URLs.
 
 **metadata**
 - id, amount, imageId (FK), trashName (FK)
@@ -397,8 +399,9 @@ The application requires these environment variables to start (see `Constants.kt
 - `CLIENT_JWT_SECRET` - Client signing secret (**change in production!**)
 - `AGENT_JWT_SECRET` - Agent signing secret (**change in production!**)
 
-**MinIO Object Storage** (4 variables)
-- `MINIO_ENDPOINT` - MinIO server URL
+**MinIO Object Storage** (5 variables)
+- `MINIO_HOSTNAME` - Internal MinIO server hostname (for API-to-MinIO communication, e.g., `http://minio:9000`)
+- `MINIO_PUBLIC_HOSTNAME` - Public-facing MinIO hostname (for generating presigned URLs in API responses, e.g., `https://srw-assets.achmad.dev`)
 - `MINIO_ACCESS_KEY` - MinIO username
 - `MINIO_SECRET_KEY` - MinIO password
 - `MINIO_BUCKET` - Bucket name for images

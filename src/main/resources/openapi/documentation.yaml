@@ -2006,8 +2006,10 @@ components:
       properties:
         id:
           type: string
+          description: Image ID (object key in MinIO storage)
         url:
           type: string
+          description: Presigned URL for accessing the image. Expires after 7 days. Generate a new URL by calling the API again to get a fresh presigned URL.
         metadata:
           type: array
           items:

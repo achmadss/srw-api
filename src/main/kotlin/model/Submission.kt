@@ -65,7 +65,7 @@ class Submission(id: EntityID<Int>): IntEntity(id) {
  * Extension function to convert Submission entity to SubmissionDetailResponse within a transaction
  */
 @OptIn(ExperimentalTime::class)
-fun Submission.toSubmissionDetailResponse(): SubmissionDetailResponse {
+fun Submission.toSubmissionDetailResponse(imageUrlProvider: ((String) -> String)? = null): SubmissionDetailResponse {
     return transaction {
         SubmissionDetailResponse(
             id = this@toSubmissionDetailResponse.id.value,
@@ -82,7 +82,7 @@ fun Submission.toSubmissionDetailResponse(): SubmissionDetailResponse {
             images = this@toSubmissionDetailResponse.images.map { image ->
                 SubmissionImageResponse(
                     id = image.id.value,
-                    url = image.url,
+                    url = imageUrlProvider?.invoke(image.id.value) ?: image.id.value,
                     metadata = image.metadata.map { metadata ->
                         ImageMetadataResponse(
                             id = metadata.id.value,

@@ -19,7 +19,6 @@ enum class MLStatus {
 object ImageTable : IdTable<String>("images") {
     override val id = varchar("id", 255).entityId()
     override val primaryKey = PrimaryKey(id)
-    val url = text("url")
     val submission = reference("submission_id", SubmissionTable, onDelete = ReferenceOption.CASCADE)
     val mlStatus = varchar("ml_status", 50).default(MLStatus.PENDING.name)
     val mlError = varchar("ml_error", 500).nullable()
@@ -30,7 +29,6 @@ object ImageTable : IdTable<String>("images") {
 @OptIn(ExperimentalTime::class)
 class Image(id: EntityID<String>): Entity<String>(id) {
     companion object: EntityClass<String, Image>(ImageTable)
-    var url by ImageTable.url
     var submission by Submission.Companion referencedOn ImageTable.submission
     var mlStatus by ImageTable.mlStatus
     var mlError by ImageTable.mlError

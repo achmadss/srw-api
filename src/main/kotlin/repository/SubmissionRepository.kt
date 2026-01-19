@@ -266,8 +266,7 @@ class SubmissionRepository {
         // Extract image messages for RabbitMQ
         val imageMessages = submission.images.map { image ->
             util.ImageMessage(
-                id = image.id.value,
-                url = image.url
+                id = image.id.value
             )
         }
 

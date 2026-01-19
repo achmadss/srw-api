@@ -83,7 +83,7 @@ class SubmissionService(
                     success = true,
                     code = HttpStatusCode.Created.value,
                     message = "Submission created successfully",
-                    data = submission.toSubmissionDetailResponse()
+                    data = submission.toSubmissionDetailResponse { imageId -> imageService.getImageUrl(imageId) }
                 )
             } catch (e: Exception) {
                 // If image upload fails, clean up the submission
@@ -111,7 +111,7 @@ class SubmissionService(
      */
     fun getById(id: Int): Pair<HttpStatusCode, BaseResponse<SubmissionDetailResponse?>> {
         return transaction {
-            val submission = submissionRepository.findById(id)?.toSubmissionDetailResponse()
+            val submission = submissionRepository.findById(id)?.toSubmissionDetailResponse { imageId -> imageService.getImageUrl(imageId) }
             if (submission != null) {
                 HttpStatusCode.OK to BaseResponse(
                     success = true,
@@ -156,7 +156,7 @@ class SubmissionService(
                 success = true,
                 code = HttpStatusCode.OK.value,
                 data = PaginatedResponse(
-                    data = submissions.map { it.toSubmissionDetailResponse() },
+                    data = submissions.map { it.toSubmissionDetailResponse { imageId -> imageService.getImageUrl(imageId) } },
                     page = validPage,
                     pageSize = validPageSize,
                     total = total,
@@ -198,7 +198,7 @@ class SubmissionService(
                     success = true,
                     code = HttpStatusCode.OK.value,
                     data = PaginatedResponse(
-                        data = submissions.map { it.toSubmissionDetailResponse() },
+                        data = submissions.map { it.toSubmissionDetailResponse { imageId -> imageService.getImageUrl(imageId) } },
                         page = validPage,
                         pageSize = validPageSize,
                         total = total,
@@ -248,7 +248,7 @@ class SubmissionService(
                     success = true,
                     code = HttpStatusCode.OK.value,
                     data = PaginatedResponse(
-                        data = submissions.map { it.toSubmissionDetailResponse() },
+                        data = submissions.map { it.toSubmissionDetailResponse { imageId -> imageService.getImageUrl(imageId) } },
                         page = validPage,
                         pageSize = validPageSize,
                         total = total,
@@ -342,7 +342,7 @@ class SubmissionService(
                     comment = if (approved) adminNotes else rejectionReason
                 )
 
-                val updatedSubmission = submissionRepository.findById(id)?.toSubmissionDetailResponse()!!
+                val updatedSubmission = submissionRepository.findById(id)?.toSubmissionDetailResponse { imageId -> imageService.getImageUrl(imageId) }!!
                 HttpStatusCode.OK to BaseResponse(
                     success = true,
                     code = HttpStatusCode.OK.value,
@@ -411,7 +411,7 @@ class SubmissionService(
                     comment = "Agent assigned: $agentId, pickup location: $pickupLocation"
                 )
 
-                val updatedSubmission = submissionRepository.findById(id)?.toSubmissionDetailResponse()!!
+                val updatedSubmission = submissionRepository.findById(id)?.toSubmissionDetailResponse { imageId -> imageService.getImageUrl(imageId) }!!
                 HttpStatusCode.OK to BaseResponse(
                     success = true,
                     code = HttpStatusCode.OK.value,
@@ -496,7 +496,7 @@ class SubmissionService(
                     comment = "Submission completed"
                 )
 
-                val updatedSubmission = submissionRepository.findById(id)?.toSubmissionDetailResponse()!!
+                val updatedSubmission = submissionRepository.findById(id)?.toSubmissionDetailResponse { imageId -> imageService.getImageUrl(imageId) }!!
                 HttpStatusCode.OK to BaseResponse(
                     success = true,
                     code = HttpStatusCode.OK.value,

@@ -21,7 +21,8 @@ object Env {
     const val DEFAULT_ADMIN_PASSWORD = "DEFAULT_ADMIN_PASSWORD"
 
     // MinIO Storage
-    const val MINIO_ENDPOINT = "MINIO_ENDPOINT"
+    const val MINIO_HOSTNAME = "MINIO_HOSTNAME"
+    const val MINIO_PUBLIC_HOSTNAME = "MINIO_PUBLIC_HOSTNAME"
     const val MINIO_ACCESS_KEY = "MINIO_ACCESS_KEY"
     const val MINIO_SECRET_KEY = "MINIO_SECRET_KEY"
     const val MINIO_BUCKET = "MINIO_BUCKET"
@@ -73,7 +74,8 @@ fun validateEnvironmentVariables() {
         Env.ADMIN_JWT_SECRET,
         Env.CLIENT_JWT_SECRET,
         Env.AGENT_JWT_SECRET,
-        Env.MINIO_ENDPOINT,
+        Env.MINIO_HOSTNAME,
+        Env.MINIO_PUBLIC_HOSTNAME,
         Env.MINIO_ACCESS_KEY,
         Env.MINIO_SECRET_KEY,
         Env.MINIO_BUCKET,

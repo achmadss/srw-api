@@ -37,7 +37,8 @@ fun Application.configureKoin() {
                 // Storage
                 single<MinIOStorageService>(createdAtStart = true) {
                     MinIOStorageService(
-                        endpoint = getRequiredEnv(Env.MINIO_ENDPOINT),
+                        hostname = getRequiredEnv(Env.MINIO_HOSTNAME),
+                        publicHostname = getRequiredEnv(Env.MINIO_PUBLIC_HOSTNAME),
                         accessKey = getRequiredEnv(Env.MINIO_ACCESS_KEY),
                         secretKey = getRequiredEnv(Env.MINIO_SECRET_KEY),
                         bucketName = getRequiredEnv(Env.MINIO_BUCKET)
