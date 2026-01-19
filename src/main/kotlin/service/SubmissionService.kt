@@ -323,15 +323,6 @@ class SubmissionService(
                     submissionRepository.updateAdminNotes(id, adminNotes)
                 }
 
-                // Calculate and store total points if approved
-                if (approved) {
-                    pointRepository.create(
-                        clientId = submission.client.id.value,
-                        submissionId = id,
-                        amount = submission.calculateTotalPoints()
-                    )
-                }
-
                 // Create history entry
                 submissionHistoryRepository.create(
                     submissionId = id,
@@ -494,6 +485,13 @@ class SubmissionService(
                     changedBy = agentId,
                     userType = UserType.AGENT.value,
                     comment = "Submission completed"
+                )
+
+                // Award points only upon completion (pickup finished)
+                pointRepository.create(
+                    clientId = submission.client.id.value,
+                    submissionId = id,
+                    amount = submission.calculateTotalPoints()
                 )
 
                 val updatedSubmission = submissionRepository.findById(id)?.toSubmissionDetailResponse { imageId -> imageService.getImageUrl(imageId) }!!

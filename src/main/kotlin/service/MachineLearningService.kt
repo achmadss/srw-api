@@ -47,9 +47,11 @@ class MachineLearningService(
         transaction {
             try {
                 val submission = submissionRepository.findById(result.submissionId)
-                if (submission == null || submission.getStatus() != SubmissionStatus.ML_PROCESSING) {
+                if (submission == null) {
                     return@transaction
                 }
+
+                val currentStatus = submission.getStatus()
 
                 // Process each image result
                 result.results.forEach { imageResult ->
@@ -82,9 +84,17 @@ class MachineLearningService(
                     }
                 }
 
-                // Update submission status to AWAITING_REVIEW only if currently ML_PROCESSING
-                if (submission.getStatus() == SubmissionStatus.ML_PROCESSING) {
-                    val oldStatus = submission.getStatus()
+                // Calculate failure count for history comment
+                val failedCount = result.results.count { !it.success }
+                val successCount = result.results.count { it.success }
+                val comment = when {
+                    failedCount > 0 && successCount > 0 -> "ML processing completed: $successCount succeeded, $failedCount failed"
+                    failedCount > 0 -> "ML processing failed: all $failedCount image(s) failed"
+                    else -> "ML processing completed"
+                }
+
+                // Update submission status to AWAITING_REVIEW if not already past that stage
+                if (currentStatus == SubmissionStatus.PENDING || currentStatus == SubmissionStatus.ML_PROCESSING) {
                     val now = kotlin.time.Clock.System.now()
                     submissionRepository.updateStatus(
                         result.submissionId,
@@ -95,15 +105,15 @@ class MachineLearningService(
                     // Create history entry
                     submissionHistoryRepository.create(
                         submissionId = result.submissionId,
-                        oldStatus = oldStatus,
+                        oldStatus = currentStatus,
                         newStatus = SubmissionStatus.AWAITING_REVIEW,
                         changedBy = 0, // System user
                         userType = "system",
-                        comment = "ML processing completed"
+                        comment = comment
                     )
                 }
 
-                println("Successfully processed ML results for submission ${result.submissionId}")
+                println("Successfully processed ML results for submission ${result.submissionId}: $comment")
 
             } catch (e: Exception) {
                 println("Error handling ML result for submission ${result.submissionId}: ${e.message}")
