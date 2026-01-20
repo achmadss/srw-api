@@ -4,6 +4,8 @@ import io.ktor.server.application.*
 import io.ktor.server.plugins.requestvalidation.*
 import model.request.*
 import resource.AdminResource
+import resource.AgentResource
+import resource.ClientResource
 
 fun Application.configureRequestValidation() {
     install(RequestValidation) {
@@ -33,7 +35,48 @@ fun Application.configureRequestValidation() {
             when {
                 resource.page < 1 -> ValidationResult.Invalid("Page must be greater than or equal to 1")
                 resource.pageSize < 1 -> ValidationResult.Invalid("Page size must be greater than or equal to 1")
-                resource.pageSize > 100 -> ValidationResult.Invalid("Page size cannot exceed 100")
+                else -> ValidationResult.Valid
+            }
+        }
+        validate<AdminResource.Agents> { resource ->
+            when {
+                resource.page < 1 -> ValidationResult.Invalid("Page must be greater than or equal to 1")
+                resource.pageSize < 1 -> ValidationResult.Invalid("Page size must be greater than or equal to 1")
+                else -> ValidationResult.Valid
+            }
+        }
+        validate<AdminResource.Points.ClientPoints> { resource ->
+            when {
+                resource.page < 1 -> ValidationResult.Invalid("Page must be greater than or equal to 1")
+                resource.pageSize < 1 -> ValidationResult.Invalid("Page size must be greater than or equal to 1")
+                else -> ValidationResult.Valid
+            }
+        }
+        validate<AdminResource.Submissions> { resource ->
+            when {
+                resource.page < 1 -> ValidationResult.Invalid("Page must be greater than or equal to 1")
+                resource.pageSize < 1 -> ValidationResult.Invalid("Page size must be greater than or equal to 1")
+                else -> ValidationResult.Valid
+            }
+        }
+        validate<AgentResource.Submissions> { resource ->
+            when {
+                resource.page < 1 -> ValidationResult.Invalid("Page must be greater than or equal to 1")
+                resource.pageSize < 1 -> ValidationResult.Invalid("Page size must be greater than or equal to 1")
+                else -> ValidationResult.Valid
+            }
+        }
+        validate<ClientResource.Submissions> { resource ->
+            when {
+                resource.page < 1 -> ValidationResult.Invalid("Page must be greater than or equal to 1")
+                resource.pageSize < 1 -> ValidationResult.Invalid("Page size must be greater than or equal to 1")
+                else -> ValidationResult.Valid
+            }
+        }
+        validate<ClientResource.Profile.Points> { resource ->
+            when {
+                resource.page < 1 -> ValidationResult.Invalid("Page must be greater than or equal to 1")
+                resource.pageSize < 1 -> ValidationResult.Invalid("Page size must be greater than or equal to 1")
                 else -> ValidationResult.Valid
             }
         }

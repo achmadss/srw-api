@@ -33,6 +33,13 @@ object Env {
     // Trash Types Configuration
     const val TRASH_TYPES_CONFIG_PATH = "TRASH_TYPES_CONFIG_PATH"
     const val DEFAULT_TRASH_POINTS_PER_UNIT = "DEFAULT_TRASH_POINTS_PER_UNIT"
+
+    // API Logging Configuration
+    const val API_LOG_LEVEL = "API_LOG_LEVEL"
+    const val API_LOG_REQUEST_BODY = "API_LOG_REQUEST_BODY"
+    const val API_LOG_REQUEST_HEADERS = "API_LOG_REQUEST_HEADERS"
+    const val API_LOG_RESPONSE_BODY = "API_LOG_RESPONSE_BODY"
+    const val API_LOG_RESPONSE_HEADERS = "API_LOG_RESPONSE_HEADERS"
 }
 
 object JwtAuth {
