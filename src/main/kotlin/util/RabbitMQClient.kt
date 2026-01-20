@@ -17,8 +17,7 @@ data class MLJobMessage(
 
 @Serializable
 data class ImageMessage(
-    val id: String,
-    val url: String
+    val id: String
 )
 
 @Serializable

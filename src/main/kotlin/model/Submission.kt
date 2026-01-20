@@ -17,7 +17,6 @@ object SubmissionTable: IntIdTable("submissions") {
     val rejectionReason = text("rejection_reason").nullable()
     val adminNotes = text("admin_notes").nullable()
     val pickupLocation = text("pickup_location").nullable()
-    val totalPoints = integer("total_points").nullable()
     val createdAt = timestamp("created_at")
     val updatedAt = timestamp("updated_at")
     val processedAt = timestamp("processed_at").nullable()
@@ -35,7 +34,6 @@ class Submission(id: EntityID<Int>): IntEntity(id) {
     var rejectionReason by SubmissionTable.rejectionReason
     var adminNotes by SubmissionTable.adminNotes
     var pickupLocation by SubmissionTable.pickupLocation
-    var totalPoints by SubmissionTable.totalPoints
     var createdAt by SubmissionTable.createdAt
     var updatedAt by SubmissionTable.updatedAt
     var processedAt by SubmissionTable.processedAt
@@ -57,33 +55,9 @@ class Submission(id: EntityID<Int>): IntEntity(id) {
     fun setStatus(newStatus: SubmissionStatus) {
         status = newStatus.name
     }
-}
 
-/**
- * Extension function to convert Submission entity to SubmissionResponse within a transaction
- */
-@OptIn(ExperimentalTime::class)
-fun Submission.toSubmissionResponse(): SubmissionResponse {
-    return transaction {
-        SubmissionResponse(
-            id = this@toSubmissionResponse.id.value,
-            clientId = this@toSubmissionResponse.client.id.value,
-            clientName = this@toSubmissionResponse.client.name,
-            agentId = this@toSubmissionResponse.agent?.id?.value,
-            agentName = this@toSubmissionResponse.agent?.name,
-            status = this@toSubmissionResponse.getStatus(),
-            rejectionReason = this@toSubmissionResponse.rejectionReason,
-            adminNotes = this@toSubmissionResponse.adminNotes,
-            pickupLocation = this@toSubmissionResponse.pickupLocation,
-            totalPoints = this@toSubmissionResponse.totalPoints,
-            imageCount = this@toSubmissionResponse.images.count().toInt(),
-            createdAt = this@toSubmissionResponse.createdAt,
-            updatedAt = this@toSubmissionResponse.updatedAt,
-            processedAt = this@toSubmissionResponse.processedAt,
-            reviewedAt = this@toSubmissionResponse.reviewedAt,
-            assignedAt = this@toSubmissionResponse.assignedAt,
-            pickedUpAt = this@toSubmissionResponse.pickedUpAt
-        )
+    fun calculateTotalPoints(): Int {
+        return images.flatMap { it.metadata }.sumOf { it.amount * it.trash.pointsPerUnit }
     }
 }
 
@@ -91,7 +65,7 @@ fun Submission.toSubmissionResponse(): SubmissionResponse {
  * Extension function to convert Submission entity to SubmissionDetailResponse within a transaction
  */
 @OptIn(ExperimentalTime::class)
-fun Submission.toSubmissionDetailResponse(): SubmissionDetailResponse {
+fun Submission.toSubmissionDetailResponse(imageUrlProvider: ((String) -> String)? = null): SubmissionDetailResponse {
     return transaction {
         SubmissionDetailResponse(
             id = this@toSubmissionDetailResponse.id.value,
@@ -104,11 +78,11 @@ fun Submission.toSubmissionDetailResponse(): SubmissionDetailResponse {
             rejectionReason = this@toSubmissionDetailResponse.rejectionReason,
             adminNotes = this@toSubmissionDetailResponse.adminNotes,
             pickupLocation = this@toSubmissionDetailResponse.pickupLocation,
-            totalPoints = this@toSubmissionDetailResponse.totalPoints,
+            totalPoints = this@toSubmissionDetailResponse.calculateTotalPoints(),
             images = this@toSubmissionDetailResponse.images.map { image ->
                 SubmissionImageResponse(
                     id = image.id.value,
-                    url = image.url,
+                    url = imageUrlProvider?.invoke(image.id.value) ?: image.id.value,
                     metadata = image.metadata.map { metadata ->
                         ImageMetadataResponse(
                             id = metadata.id.value,
@@ -127,36 +101,6 @@ fun Submission.toSubmissionDetailResponse(): SubmissionDetailResponse {
             assignedAt = this@toSubmissionDetailResponse.assignedAt,
             pickedUpAt = this@toSubmissionDetailResponse.pickedUpAt
         )
-    }
-}
-
-/**
- * Extension function to convert List of Submission entities to List of SubmissionResponse within a transaction
- */
-@OptIn(ExperimentalTime::class)
-fun List<Submission>.toSubmissionResponses(): List<SubmissionResponse> {
-    return transaction {
-        this@toSubmissionResponses.map { submission ->
-            SubmissionResponse(
-                id = submission.id.value,
-                clientId = submission.client.id.value,
-                clientName = submission.client.name,
-                agentId = submission.agent?.id?.value,
-                agentName = submission.agent?.name,
-                status = submission.getStatus(),
-                rejectionReason = submission.rejectionReason,
-                adminNotes = submission.adminNotes,
-                pickupLocation = submission.pickupLocation,
-                totalPoints = submission.totalPoints,
-                imageCount = submission.images.count().toInt(),
-                createdAt = submission.createdAt,
-                updatedAt = submission.updatedAt,
-                processedAt = submission.processedAt,
-                reviewedAt = submission.reviewedAt,
-                assignedAt = submission.assignedAt,
-                pickedUpAt = submission.pickedUpAt
-            )
-        }
     }
 }
 

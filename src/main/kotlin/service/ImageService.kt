@@ -45,13 +45,9 @@ class ImageService(
                 size = size
             )
 
-            // Get public URL
-            val imageUrl = storageService.getPresignedUrl(objectKey)
-
             // Create database record with objectKey as ID (unique)
             imageRepository.create(
                 id = objectKey,
-                url = imageUrl,
                 submissionId = submissionId
             )
         }
@@ -97,6 +93,16 @@ class ImageService(
         return transaction {
             imageRepository.findBySubmission(submissionId)
         }
+    }
+
+    /**
+     * Get a presigned URL for an image (for API responses)
+     *
+     * @param imageId The image ID (objectKey)
+     * @return Presigned URL for accessing the image
+     */
+    fun getImageUrl(imageId: String): String {
+        return storageService.getPresignedUrl(imageId)
     }
 
     /**

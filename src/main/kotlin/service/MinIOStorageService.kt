@@ -10,13 +10,20 @@ import java.util.*
  * Service for handling file storage operations with MinIO
  */
 class MinIOStorageService(
-    private val endpoint: String,
+    private val hostname: String,
+    private val publicHostname: String,
     private val accessKey: String,
     private val secretKey: String,
     private val bucketName: String
 ) {
     private val minioClient: MinioClient = MinioClient.builder()
-        .endpoint(endpoint)
+        .endpoint(hostname)
+        .credentials(accessKey, secretKey)
+        .build()
+
+    // Separate client for generating presigned URLs with public hostname
+    private val publicMinioClient: MinioClient = MinioClient.builder()
+        .endpoint(publicHostname)
         .credentials(accessKey, secretKey)
         .build()
 
@@ -82,7 +89,7 @@ class MinIOStorageService(
      * @return The full URL to access the object
      */
     fun getObjectUrl(objectKey: String): String {
-        return "$endpoint/$bucketName/$objectKey"
+        return "$publicHostname/$bucketName/$objectKey"
     }
 
     /**
@@ -93,7 +100,8 @@ class MinIOStorageService(
      * @return Presigned URL
      */
     fun getPresignedUrl(objectKey: String, expirySeconds: Int = 604800): String {
-        return minioClient.getPresignedObjectUrl(
+        // Use publicMinioClient to generate presigned URL with public hostname
+        return publicMinioClient.getPresignedObjectUrl(
             GetPresignedObjectUrlArgs.builder()
                 .method(Method.GET)
                 .bucket(bucketName)

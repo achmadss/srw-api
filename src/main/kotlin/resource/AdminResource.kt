@@ -4,6 +4,7 @@ import JwtAuth
 import com.srw.util.injectLazy
 import io.ktor.resources.*
 import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.request.*
 import io.ktor.server.resources.*
 import io.ktor.server.resources.post
@@ -133,6 +134,20 @@ fun Route.adminResources() {
             val (code, response) = clientService.getById(resource.id)
             call.respond(code, response)
         }
+        put<AdminResource.Clients.ById> { resource ->
+            val request = call.receive<UpdateClientRequest>()
+            val (code, response) = clientService.update(
+                id = resource.id,
+                nfc = request.nfc,
+                name = request.name,
+                address = request.address
+            )
+            call.respond(code, response)
+        }
+        delete<AdminResource.Clients.ById> { resource ->
+            val (code, response) = clientService.delete(resource.id)
+            call.respond(code, response)
+        }
 
         // Agent management
         get<AdminResource.Agents> { resource ->
@@ -196,11 +211,12 @@ fun Route.adminResources() {
             call.respond(code, response)
         }
         post<AdminResource.Submissions.ById.Review> { resource ->
+            val principal = call.principal<JWTPrincipal>()!!
+            val userId = principal.payload.getClaim("userId").asInt()
             val request = call.receive<ReviewSubmissionRequest>()
-            // Note: Would need adminId from auth, but no auth yet
             val (code, response) = submissionService.review(
                 id = resource.parent.id,
-                adminId = 1, // placeholder
+                adminId = userId,
                 approved = request.approved,
                 rejectionReason = request.rejectionReason,
                 adminNotes = request.adminNotes
@@ -208,11 +224,12 @@ fun Route.adminResources() {
             call.respond(code, response)
         }
         post<AdminResource.Submissions.ById.Assign> { resource ->
+            val principal = call.principal<JWTPrincipal>()!!
+            val userId = principal.payload.getClaim("userId").asInt()
             val request = call.receive<AssignAgentRequest>()
-            // Note: Would need adminId from auth
             val (code, response) = submissionService.assignAgent(
                 id = resource.parent.id,
-                adminId = 1, // placeholder
+                adminId = userId,
                 agentId = request.agentId
             )
             call.respond(code, response)

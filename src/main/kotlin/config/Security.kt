@@ -10,6 +10,7 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.response.*
+import model.response.base.BaseResponse
 
 fun Application.configureSecurity() {
     val adminSecret = getRequiredEnv(Env.ADMIN_JWT_SECRET)
@@ -41,7 +42,13 @@ fun Application.configureSecurity() {
                 }
             }
             challenge { _, _ ->
-                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Token is not valid or has expired"))
+                val (code, response) = HttpStatusCode.Unauthorized to BaseResponse(
+                    success = false,
+                    code = HttpStatusCode.Unauthorized.value,
+                    message = "Token is not valid or has expired",
+                    data = null
+                )
+                call.respond(code, response)
             }
         }
 
@@ -64,7 +71,13 @@ fun Application.configureSecurity() {
                 }
             }
             challenge { _, _ ->
-                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Token is not valid or has expired"))
+                val (code, response) = HttpStatusCode.Unauthorized to BaseResponse(
+                    success = false,
+                    code = HttpStatusCode.Unauthorized.value,
+                    message = "Token is not valid or has expired",
+                    data = null
+                )
+                call.respond(code, response)
             }
         }
 
@@ -87,7 +100,13 @@ fun Application.configureSecurity() {
                 }
             }
             challenge { _, _ ->
-                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Token is not valid or has expired"))
+                val (code, response) = HttpStatusCode.Unauthorized to BaseResponse(
+                    success = false,
+                    code = HttpStatusCode.Unauthorized.value,
+                    message = "Token is not valid or has expired",
+                    data = null
+                )
+                call.respond(code, response)
             }
         }
     }

@@ -5,12 +5,13 @@ import numpy as np
 import onnxruntime as ort
 import os
 import pika
-import requests
 import time
 from PIL import Image
 from collections import Counter
 from io import BytesIO
 from typing import Dict
+from minio import Minio
+from minio.error import S3Error
 
 from config_loader import get_trash_types_config, TrashTypesConfig
 from mapper import mapper
@@ -20,6 +21,25 @@ RABBITMQ_URL = os.getenv("RABBITMQ_URL", "amqp://admin:admin@rabbitmq:5672")
 ML_QUEUE = "ml_processing_queue"
 RESULTS_QUEUE = "ml_results_queue"
 ACK_QUEUE = "ml_job_ack_queue"
+
+# --- MINIO ENVIRONMENT ---
+MINIO_HOSTNAME = os.getenv("MINIO_HOSTNAME", "http://minio:9000")
+MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
+MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "minioadmin")
+MINIO_BUCKET = os.getenv("MINIO_BUCKET", "srw-images")
+
+# Extract endpoint and secure flag from hostname (supports both self-hosted and managed services)
+# Examples: "http://minio:9000" -> endpoint="minio:9000", secure=False
+#           "https://s3.amazonaws.com" -> endpoint="s3.amazonaws.com", secure=True
+is_secure = MINIO_HOSTNAME.startswith("https://")
+endpoint = MINIO_HOSTNAME.replace("http://", "").replace("https://", "")
+
+minio_client = Minio(
+    endpoint,
+    access_key=MINIO_ACCESS_KEY,
+    secret_key=MINIO_SECRET_KEY,
+    secure=is_secure
+)
 
 MODEL_PATH = "./best.onnx"
 
@@ -69,14 +89,13 @@ def postprocess(outputs, score_threshold=0.5):
     return results
 
 
-def process_image(image_id: str, image_url: str, trash_config: TrashTypesConfig) -> Dict:
-    print(f"Processing image {image_id}: {image_url}")
+def process_image(image_id: str, trash_config: TrashTypesConfig) -> Dict:
+    print(f"Processing image {image_id}")
 
     try:
-        # 1. Download image
-        resp = requests.get(image_url, timeout=10)
-        resp.raise_for_status()
-        img = Image.open(BytesIO(resp.content))
+        # 1. Download image from MinIO using authenticated client
+        response = minio_client.get_object(MINIO_BUCKET, image_id)
+        img = Image.open(BytesIO(response.data))
 
         # 2. Preprocess
         input_tensor = preprocess(img)
@@ -129,7 +148,7 @@ def process_ml_job(job_data: Dict, trash_config: TrashTypesConfig) -> Dict:
     results = []
     for idx, image in enumerate(images, 1):
         print(f"[{idx}/{len(images)}] Processing image...")
-        result = process_image(image["id"], image["url"], trash_config)
+        result = process_image(image["id"], trash_config)
         results.append(result)
 
     successful = sum(1 for r in results if r["success"])

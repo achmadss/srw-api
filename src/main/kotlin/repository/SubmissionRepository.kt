@@ -248,18 +248,6 @@ class SubmissionRepository {
     }
 
     /**
-     * Update total points
-     */
-    fun updateTotalPoints(id: Int, points: Int): Submission {
-        val submission = Submission.findById(id)
-            ?: throw IllegalArgumentException("Submission with id $id not found")
-
-        submission.totalPoints = points
-        submission.updatedAt = Clock.System.now()
-        return submission
-    }
-
-    /**
      * Delete submission
      */
     fun delete(id: Int) {
@@ -278,8 +266,7 @@ class SubmissionRepository {
         // Extract image messages for RabbitMQ
         val imageMessages = submission.images.map { image ->
             util.ImageMessage(
-                id = image.id.value,
-                url = image.url
+                id = image.id.value
             )
         }
 

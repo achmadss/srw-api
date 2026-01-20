@@ -239,7 +239,7 @@ paths:
           required: true
           schema:
             type: integer
-          description: Agent ID
+          description: Client ID
       responses:
         '200':
           description: Successful response
@@ -265,13 +265,108 @@ paths:
               schema:
                 $ref: '#/components/schemas/BaseResponse'
         '404':
-          description: Agent not found
+          description: Client not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/BaseResponse'
       security:
         - bearerAuth: [ ]
+    put:
+      tags:
+        - admin
+      summary: Update client
+      description: Update client information. Requires admin authentication.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Client ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateClientRequest'
+      responses:
+        '200':
+          description: Client updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BaseResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ClientResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '404':
+          description: Client not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+      security:
+        - bearerAuth: []
+    delete:
+      tags:
+        - admin
+      summary: Delete client
+      description: Delete a client. Requires admin authentication.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Client ID
+      responses:
+        '200':
+          description: Client deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '404':
+          description: Client not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+      security:
+        - bearerAuth: []
   /admin/clients/new:
     post:
       tags:
@@ -1139,7 +1234,7 @@ paths:
                   - type: object
                     properties:
                       data:
-                        $ref: '#/components/schemas/SubmissionResponse'
+                        $ref: '#/components/schemas/SubmissionDetailResponse'
         '400':
           description: Bad request - no images provided or invalid data
           content:
@@ -1599,6 +1694,15 @@ components:
           type: string
         address:
           type: string
+    UpdateClientRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        nfc:
+          type: string
+        address:
+          type: string
     ClientResponse:
       type: object
       required:
@@ -1801,7 +1905,7 @@ components:
         data:
           type: array
           items:
-            $ref: '#/components/schemas/SubmissionResponse'
+            $ref: '#/components/schemas/SubmissionDetailResponse'
         page:
           type: integer
         pageSize:
@@ -1840,59 +1944,6 @@ components:
         amount:
           type: integer
           description: Amount of points to claim (positive integer)
-    SubmissionResponse:
-      type: object
-      properties:
-        id:
-          type: integer
-        clientId:
-          type: integer
-        clientName:
-          type: string
-        agentId:
-          type: integer
-          nullable: true
-        agentName:
-          type: string
-          nullable: true
-        status:
-          $ref: '#/components/schemas/SubmissionStatus'
-        rejectionReason:
-          type: string
-          nullable: true
-        adminNotes:
-          type: string
-          nullable: true
-        pickupLocation:
-          type: string
-          nullable: true
-        totalPoints:
-          type: integer
-          nullable: true
-        imageCount:
-          type: integer
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-        processedAt:
-          type: string
-          format: date-time
-          nullable: true
-        reviewedAt:
-          type: string
-          format: date-time
-          nullable: true
-        assignedAt:
-          type: string
-          format: date-time
-          nullable: true
-        pickedUpAt:
-          type: string
-          format: date-time
-          nullable: true
     SubmissionDetailResponse:
       type: object
       properties:
@@ -1955,8 +2006,10 @@ components:
       properties:
         id:
           type: string
+          description: Image ID (object key in MinIO storage)
         url:
           type: string
+          description: Presigned URL for accessing the image. Expires after 7 days. Generate a new URL by calling the API again to get a fresh presigned URL.
         metadata:
           type: array
           items:
