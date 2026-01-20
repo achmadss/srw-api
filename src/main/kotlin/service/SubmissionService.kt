@@ -149,7 +149,11 @@ class SubmissionService(
                 submissionRepository.findAllPaginated(validPage, validPageSize)
             }
 
-            val total = submissionRepository.totalCount()
+            val total = if (status != null) {
+                submissionRepository.totalCountByStatus(status)
+            } else {
+                submissionRepository.totalCount()
+            }
             val totalPages = if (total == 0) 1 else ((total + validPageSize - 1) / validPageSize)
 
             HttpStatusCode.OK to BaseResponse(

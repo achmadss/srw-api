@@ -181,6 +181,13 @@ class SubmissionRepository {
     }
 
     /**
+     * Get total count of submissions by status
+     */
+    fun totalCountByStatus(status: SubmissionStatus): Int {
+        return Submission.find { SubmissionTable.status eq status.name }.count().toInt()
+    }
+
+    /**
      * Update submission status
      */
     fun updateStatus(
