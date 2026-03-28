@@ -16,7 +16,9 @@ object SubmissionTable: IntIdTable("submissions") {
     val status = varchar("status", 50).default("PENDING")
     val rejectionReason = text("rejection_reason").nullable()
     val adminNotes = text("admin_notes").nullable()
-    val pickupLocation = text("pickup_location").nullable()
+    val submissionAddress = text("submission_address").nullable()
+    val submissionLatitude = float("submission_latitude").nullable()
+    val submissionLongitude = float("submission_longitude").nullable()
     val createdAt = timestamp("created_at")
     val updatedAt = timestamp("updated_at")
     val processedAt = timestamp("processed_at").nullable()
@@ -33,7 +35,9 @@ class Submission(id: EntityID<Int>): IntEntity(id) {
     var status by SubmissionTable.status
     var rejectionReason by SubmissionTable.rejectionReason
     var adminNotes by SubmissionTable.adminNotes
-    var pickupLocation by SubmissionTable.pickupLocation
+    var submissionAddress by SubmissionTable.submissionAddress
+    var submissionLatitude by SubmissionTable.submissionLatitude
+    var submissionLongitude by SubmissionTable.submissionLongitude
     var createdAt by SubmissionTable.createdAt
     var updatedAt by SubmissionTable.updatedAt
     var processedAt by SubmissionTable.processedAt
@@ -77,7 +81,10 @@ fun Submission.toSubmissionDetailResponse(imageUrlProvider: ((String) -> String)
             status = this@toSubmissionDetailResponse.getStatus(),
             rejectionReason = this@toSubmissionDetailResponse.rejectionReason,
             adminNotes = this@toSubmissionDetailResponse.adminNotes,
-            pickupLocation = this@toSubmissionDetailResponse.pickupLocation,
+            pickupLocation = this@toSubmissionDetailResponse.submissionAddress,
+            submissionAddress = this@toSubmissionDetailResponse.submissionAddress,
+            submissionLatitude = this@toSubmissionDetailResponse.submissionLatitude,
+            submissionLongitude = this@toSubmissionDetailResponse.submissionLongitude,
             totalPoints = this@toSubmissionDetailResponse.calculateTotalPoints(),
             images = this@toSubmissionDetailResponse.images.map { image ->
                 SubmissionImageResponse(

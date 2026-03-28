@@ -13,7 +13,12 @@ class SubmissionRepository {
     /**
      * Create a new submission with PENDING status
      */
-    fun create(clientId: Int): Pair<Submission, Int> {
+    fun create(
+        clientId: Int,
+        address: String? = null,
+        latitude: Float? = null,
+        longitude: Float? = null
+    ): Pair<Submission, Int> {
         val client = Client.findById(clientId)
             ?: throw IllegalArgumentException("Client with id $clientId not found")
 
@@ -22,6 +27,9 @@ class SubmissionRepository {
             this.client = client
             this.agent = null
             this.status = SubmissionStatus.PENDING.name
+            this.submissionAddress = address
+            this.submissionLatitude = latitude
+            this.submissionLongitude = longitude
             this.createdAt = now
             this.updatedAt = now
         }
@@ -218,14 +226,13 @@ class SubmissionRepository {
     /**
      * Assign agent to submission
      */
-    fun assignAgent(id: Int, agentId: Int, pickupLocation: String? = null): Submission {
+    fun assignAgent(id: Int, agentId: Int): Submission {
         val submission = Submission.findById(id)
             ?: throw IllegalArgumentException("Submission with id $id not found")
         val agent = Agent.findById(agentId)
             ?: throw IllegalArgumentException("Agent with id $agentId not found")
 
         submission.agent = agent
-        submission.pickupLocation = pickupLocation
         submission.updatedAt = Clock.System.now()
         return submission
     }

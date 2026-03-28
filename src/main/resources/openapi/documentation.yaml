@@ -1247,7 +1247,7 @@ paths:
       tags:
         - client
       summary: Create new submission
-      description: Create a new submission with uploaded images. Requires client authentication.
+      description: Create a new submission with uploaded images. Address and location are automatically taken from client's stored profile. Requires client authentication.
       requestBody:
         required: true
         content:
@@ -1255,7 +1255,7 @@ paths:
             schema:
               type: object
               properties:
-                images:
+                image:
                   type: array
                   items:
                     type: string
@@ -2048,8 +2048,16 @@ components:
         adminNotes:
           type: string
           nullable: true
-        pickupLocation:
+        submissionAddress:
           type: string
+          nullable: true
+        submissionLatitude:
+          type: number
+          format: float
+          nullable: true
+        submissionLongitude:
+          type: number
+          format: float
           nullable: true
         totalPoints:
           type: integer

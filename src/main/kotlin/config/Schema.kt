@@ -72,4 +72,46 @@ private fun runMigrations() {
     } catch (e: Exception) {
         println("Migration: Could not make address nullable - may already be nullable or column doesn't exist")
     }
+
+    // Migration: Add submission location columns to submissions table
+    try {
+        transaction {
+            val connection = this.connection.connection as java.sql.Connection
+            val statement = connection.createStatement()
+            statement.execute("ALTER TABLE submissions ADD COLUMN IF NOT EXISTS submission_address TEXT")
+            statement.execute("ALTER TABLE submissions ADD COLUMN IF NOT EXISTS submission_latitude FLOAT")
+            statement.execute("ALTER TABLE submissions ADD COLUMN IF NOT EXISTS submission_longitude FLOAT")
+            statement.close()
+        }
+        println("Migration: Added submission location columns to 'submissions' table")
+    } catch (e: Exception) {
+        println("Migration: Could not add submission location columns - may already exist")
+    }
+
+    // Migration: Migrate pickupLocation data to submission_address
+    try {
+        transaction {
+            val connection = this.connection.connection as java.sql.Connection
+            val statement = connection.createStatement()
+            statement.execute("UPDATE submissions SET submission_address = pickupLocation WHERE submission_address IS NULL AND pickupLocation IS NOT NULL")
+            val updatedRows = statement.updateCount
+            statement.close()
+            println("Migration: Migrated $updatedRows rows from pickupLocation to submission_address")
+        }
+    } catch (e: Exception) {
+        println("Migration: Could not migrate pickupLocation data - ${e.message}")
+    }
+
+    // Migration: Drop old pickupLocation column
+    try {
+        transaction {
+            val connection = this.connection.connection as java.sql.Connection
+            val statement = connection.createStatement()
+            statement.execute("ALTER TABLE submissions DROP COLUMN IF EXISTS pickupLocation")
+            statement.close()
+        }
+        println("Migration: Dropped 'pickupLocation' column from 'submissions' table")
+    } catch (e: Exception) {
+        println("Migration: Could not drop pickupLocation column - ${e.message}")
+    }
 }

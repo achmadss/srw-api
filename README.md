@@ -294,6 +294,7 @@ Base URL: `http://localhost:8080`
 - `POST /clients/profile/address` - Set/update client address and location (for first-time setup)
 - `GET /clients/submissions` - Get client's submissions (paginated)
 - `POST /clients/submissions/new` - Create new submission with images (multipart/form-data)
+  - Accepts: `image` (files) only; address/latlong fetched from client's stored profile
 - `GET /clients/submissions/{id}` - Get submission details (own submissions only)
 - `GET /clients/profile/points` - Get client's points ledger
 
@@ -342,8 +343,9 @@ The API provides comprehensive documentation through multiple channels:
 
 **submissions**
 - id, clientId (FK), agentId (FK, nullable), status
-- rejectionReason, adminNotes, pickupLocation, totalPoints
-- createdAt, updatedAt, processedAt, reviewedAt, assignedAt, pickedUpAt
+- rejectionReason, adminNotes
+- submissionAddress, submissionLatitude, submissionLongitude (captured at submission time)
+- totalPoints, createdAt, updatedAt, processedAt, reviewedAt, assignedAt, pickedUpAt
 
 **images**
 - id (UUID string, PK), submissionId (FK)
@@ -601,6 +603,7 @@ The application provides comprehensive monitoring capabilities:
    ```bash
    POST /clients/submissions/new
    # Upload 1-3 images
+   # Address/latlong automatically from client's stored profile
    ```
 
 4. Admin reviews (login as admin first):

@@ -56,8 +56,21 @@ class SubmissionService(
             var submissionId: Int? = null
 
             try {
-                // Create the submission first
-                val (_, id) = submissionRepository.create(clientId)
+                // Get client's stored address for submission location
+                val client = repository.Client.findById(clientId)
+                    ?: return@transaction HttpStatusCode.NotFound to BaseResponse(
+                        success = false,
+                        code = HttpStatusCode.NotFound.value,
+                        message = "Client not found",
+                        data = null
+                    )
+
+                val (_, id) = submissionRepository.create(
+                    clientId = clientId,
+                    address = client.address,
+                    latitude = client.latitude,
+                    longitude = client.longitude
+                )
                 submissionId = id
 
                 // Upload images to MinIO and create database records
@@ -387,11 +400,8 @@ class SubmissionService(
 
                 val now = Clock.System.now()
 
-                // Use client's address as pickup location
-                val pickupLocation = submission.client.address
-
-                // Assign agent with client's address as pickup location
-                submissionRepository.assignAgent(id, agentId, pickupLocation)
+                // Assign agent to submission (location already captured at submission creation)
+                submissionRepository.assignAgent(id, agentId)
 
                 // Update status
                 submissionRepository.updateStatus(id, SubmissionStatus.ASSIGNED, now)
