@@ -78,40 +78,48 @@ private fun runMigrations() {
         transaction {
             val connection = this.connection.connection as java.sql.Connection
             val statement = connection.createStatement()
-            statement.execute("ALTER TABLE submissions ADD COLUMN IF NOT EXISTS submission_address TEXT")
-            statement.execute("ALTER TABLE submissions ADD COLUMN IF NOT EXISTS submission_latitude FLOAT")
-            statement.execute("ALTER TABLE submissions ADD COLUMN IF NOT EXISTS submission_longitude FLOAT")
+            
+            // Check if column exists first
+            val rs = statement.executeQuery("SELECT column_name FROM information_schema.columns WHERE table_name = 'submissions' AND column_name = 'submission_address'")
+            if (!rs.next()) {
+                statement.execute("ALTER TABLE submissions ADD COLUMN submission_address TEXT")
+                statement.execute("ALTER TABLE submissions ADD COLUMN submission_latitude FLOAT")
+                statement.execute("ALTER TABLE submissions ADD COLUMN submission_longitude FLOAT")
+                println("Migration: Added submission location columns to 'submissions' table")
+            } else {
+                println("Migration: submission_address column already exists")
+            }
+            rs.close()
             statement.close()
         }
-        println("Migration: Added submission location columns to 'submissions' table")
     } catch (e: Exception) {
-        println("Migration: Could not add submission location columns - may already exist")
+        println("Migration ERROR: Could not add submission location columns - ${e.message}")
     }
 
-    // Migration: Migrate pickupLocation data to submission_address
+    // Migration: Migrate pickup_location data to submission_address
     try {
         transaction {
             val connection = this.connection.connection as java.sql.Connection
             val statement = connection.createStatement()
-            statement.execute("UPDATE submissions SET submission_address = pickupLocation WHERE submission_address IS NULL AND pickupLocation IS NOT NULL")
+            statement.execute("UPDATE submissions SET submission_address = pickup_location WHERE submission_address IS NULL AND pickup_location IS NOT NULL")
             val updatedRows = statement.updateCount
             statement.close()
-            println("Migration: Migrated $updatedRows rows from pickupLocation to submission_address")
+            println("Migration: Migrated $updatedRows rows from pickup_location to submission_address")
         }
     } catch (e: Exception) {
-        println("Migration: Could not migrate pickupLocation data - ${e.message}")
+        println("Migration ERROR: Could not migrate pickup_location data - ${e.message}")
     }
 
-    // Migration: Drop old pickupLocation column
+    // Migration: Drop old pickup_location column
     try {
         transaction {
             val connection = this.connection.connection as java.sql.Connection
             val statement = connection.createStatement()
-            statement.execute("ALTER TABLE submissions DROP COLUMN IF EXISTS pickupLocation")
+            statement.execute("ALTER TABLE submissions DROP COLUMN IF EXISTS pickup_location")
             statement.close()
         }
-        println("Migration: Dropped 'pickupLocation' column from 'submissions' table")
+        println("Migration: Dropped 'pickup_location' column from 'submissions' table")
     } catch (e: Exception) {
-        println("Migration: Could not drop pickupLocation column - ${e.message}")
+        println("Migration ERROR: Could not drop pickup_location column - ${e.message}")
     }
 }
