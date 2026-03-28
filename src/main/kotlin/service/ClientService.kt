@@ -8,6 +8,7 @@ import model.toClientResponse
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import repository.ClientRepository
 import repository.PointRepository
+import kotlin.time.Clock
 
 class ClientService(
     private val clientRepository: ClientRepository,
@@ -16,14 +17,18 @@ class ClientService(
     fun create(
         name: String,
         nfc: String,
-        address: String,
+        address: String?,
+        latitude: Float?,
+        longitude: Float?,
     ): Pair<HttpStatusCode, BaseResponse<ClientResponse>> {
         return transaction {
             try {
                 val client = clientRepository.create(
                     name = name,
                     nfc = nfc,
-                    address = address
+                    address = address,
+                    latitude = latitude,
+                    longitude = longitude
                 )
 
                 HttpStatusCode.Created to BaseResponse(
@@ -128,8 +133,10 @@ class ClientService(
     fun update(
         id: Int, 
         nfc: String?,
-        name: String?, 
-        address: String?
+        name: String?,
+        address: String?,
+        latitude: Float?,
+        longitude: Float?,
     ): Pair<HttpStatusCode, BaseResponse<ClientResponse?>> {
         return transaction {
             try {
@@ -137,7 +144,9 @@ class ClientService(
                     id = id,
                     name = name,
                     nfc = nfc,
-                    address = address
+                    address = address,
+                    latitude = latitude,
+                    longitude = longitude
                 )
 
                 val totalPoints = pointRepository.getClientTotalPoints(client.id.value)
@@ -153,6 +162,55 @@ class ClientService(
                     success = false,
                     code = HttpStatusCode.BadRequest.value,
                     message = e.message ?: "Failed to update client",
+                    data = null
+                )
+            } catch (e: Exception) {
+                HttpStatusCode.InternalServerError to BaseResponse(
+                    success = false,
+                    code = HttpStatusCode.InternalServerError.value,
+                    message = "Internal server error",
+                    data = null
+                )
+            }
+        }
+    }
+
+    fun setAddress(
+        id: Int,
+        address: String,
+        latitude: Float?,
+        longitude: Float?,
+    ): Pair<HttpStatusCode, BaseResponse<ClientResponse?>> {
+        return transaction {
+            try {
+                val client = clientRepository.findById(id)
+                    ?: return@transaction HttpStatusCode.NotFound to BaseResponse(
+                        success = false,
+                        code = HttpStatusCode.NotFound.value,
+                        message = "Client not found",
+                        data = null
+                    )
+
+                require(address.isNotBlank()) { "Address cannot be blank" }
+
+                client.address = address
+                latitude?.let { client.latitude = it }
+                longitude?.let { client.longitude = it }
+                client.updatedAt = Clock.System.now()
+
+                val totalPoints = pointRepository.getClientTotalPoints(client.id.value)
+
+                HttpStatusCode.OK to BaseResponse(
+                    success = true,
+                    code = HttpStatusCode.OK.value,
+                    message = "Address set successfully",
+                    data = client.toClientResponse(totalPoints)
+                )
+            } catch (e: IllegalArgumentException) {
+                HttpStatusCode.BadRequest to BaseResponse(
+                    success = false,
+                    code = HttpStatusCode.BadRequest.value,
+                    message = e.message ?: "Failed to set address",
                     data = null
                 )
             } catch (e: Exception) {

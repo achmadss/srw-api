@@ -14,6 +14,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.Route
 import io.ktor.utils.io.jvm.javaio.toInputStream
 import java.io.ByteArrayInputStream
+import model.request.SetAddressRequest
 import model.response.base.BaseResponse
 import service.ClientService
 import service.ImageUploadData
@@ -43,6 +44,8 @@ class ClientResource {
             val page: Int = 1,
             val pageSize: Int = 20
         )
+        @Resource("address")
+        class Address(val parent: Profile = Profile())
     }
 }
 
@@ -62,6 +65,19 @@ fun Route.clientResources() {
             val principal = call.principal<JWTPrincipal>()!!
             val clientId = principal.payload.getClaim("userId").asInt()
             val (code, response) = pointService.getPointLedgerByClientId(clientId, resource.page, resource.pageSize)
+            call.respond(code, response)
+        }
+
+        post<ClientResource.Profile.Address> {
+            val principal = call.principal<JWTPrincipal>()!!
+            val clientId = principal.payload.getClaim("userId").asInt()
+            val request = call.receive<SetAddressRequest>()
+            val (code, response) = clientService.setAddress(
+                id = clientId,
+                address = request.address,
+                latitude = request.latitude?.toFloat(),
+                longitude = request.longitude?.toFloat()
+            )
             call.respond(code, response)
         }
 

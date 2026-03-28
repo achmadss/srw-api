@@ -217,12 +217,14 @@ Base URL: `http://localhost:8080`
 
 **Client Management:**
 - `GET /admin/clients` - Get paginated list of clients
-- `POST /admin/clients/new` - Create new client
+- `POST /admin/clients/new` - Create new client (address is optional)
   ```json
   {
     "name": "John Doe",
     "nfc": "NFC123456",
-    "address": "123 Main St"
+    "address": "123 Main St",
+    "latitude": -6.200000,
+    "longitude": 106.816666
   }
   ```
 
@@ -289,6 +291,7 @@ Base URL: `http://localhost:8080`
 ### Client-Only Endpoints
 
 - `GET /clients/profile` - Get client profile
+- `POST /clients/profile/address` - Set/update client address and location (for first-time setup)
 - `GET /clients/submissions` - Get client's submissions (paginated)
 - `POST /clients/submissions/new` - Create new submission with images (multipart/form-data)
 - `GET /clients/submissions/{id}` - Get submission details (own submissions only)
@@ -335,7 +338,7 @@ The API provides comprehensive documentation through multiple channels:
 - id, name, username, password (hashed), createdAt, updatedAt
 
 **clients**
-- nfc (PK), name, address, createdAt, updatedAt
+- nfc (PK), name, address (nullable), latitude (nullable), longitude (nullable), createdAt, updatedAt
 
 **submissions**
 - id, clientId (FK), agentId (FK, nullable), status
@@ -582,10 +585,10 @@ The application provides comprehensive monitoring capabilities:
 
 ### Testing the Workflow
 
-1. Create client:
+1. Create client (address is optional, can be set later via `/clients/profile/address`):
    ```bash
    POST /admin/clients/new
-   {"name": "Test User", "nfc": "TEST001", "address": "123 Test St"}
+   {"name": "Test User", "nfc": "TEST001", "address": "123 Test St", "latitude": -6.2, "longitude": 106.8}
    ```
 
 2. Login as client:
