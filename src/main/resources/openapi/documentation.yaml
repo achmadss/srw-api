@@ -2084,7 +2084,7 @@ components:
     ManualMetadataItem:
       type: object
       properties:
-        trashTypeName:
+        trashType:
           type: string
         amount:
           type: integer

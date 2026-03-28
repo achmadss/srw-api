@@ -606,18 +606,18 @@ class SubmissionService(
 
                 // Create new metadata records
                 metadata.forEach { item ->
-                    trashRepository.findByName(item.trashTypeName)
+                    trashRepository.findByName(item.trashType)
                         ?: return@transaction HttpStatusCode.BadRequest to BaseResponse(
                             success = false,
                             code = HttpStatusCode.BadRequest.value,
-                            message = "Trash type '${item.trashTypeName}' not found",
+                            message = "Trash type '${item.trashType}' not found",
                             data = null
                         )
 
                     metadataRepository.create(
                         amount = item.amount,
                         imageId = imageId,
-                        trashName = item.trashTypeName
+                        trashName = item.trashType
                     )
                 }
 

@@ -41,6 +41,6 @@ data class ManualMetadataRequest(
  */
 @Serializable
 data class ManualMetadataItem(
-    val trashTypeName: String,
+    val trashType: String,
     val amount: Int
 )

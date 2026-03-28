@@ -116,7 +116,7 @@ fun Application.configureRequestValidation() {
                 else -> {
                     // Validate each metadata item
                     val invalidItem = request.metadata.firstOrNull { item ->
-                        item.trashTypeName.isBlank() || item.amount <= 0
+                        item.trashType.isBlank() || item.amount <= 0
                     }
                     if (invalidItem != null) {
                         ValidationResult.Invalid("Each metadata item must have a non-blank trash type name and amount greater than 0")
