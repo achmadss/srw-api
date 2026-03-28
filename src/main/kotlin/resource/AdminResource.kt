@@ -115,6 +115,7 @@ fun Route.adminResources() {
     authenticate(JwtAuth.ADMIN) {
         // Client management
         get<AdminResource.Clients> { resource ->
+        if
             val (code, response) = clientService.getPaginated(
                 page = resource.page,
                 pageSize = resource.pageSize
@@ -126,7 +127,9 @@ fun Route.adminResources() {
             val (code, response) = clientService.create(
                 name = body.name,
                 nfc = body.nfc,
-                address = body.address
+                address = body.address,
+                latitude = body.latitude,
+                longitude = body.longitude,
             )
             call.respond(code, response)
         }
@@ -140,7 +143,9 @@ fun Route.adminResources() {
                 id = resource.id,
                 nfc = request.nfc,
                 name = request.name,
-                address = request.address
+                address = request.address,
+                latitude = body.latitude,
+                longitude = body.longitude,
             )
             call.respond(code, response)
         }

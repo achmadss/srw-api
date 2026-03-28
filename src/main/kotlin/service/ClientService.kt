@@ -8,7 +8,6 @@ import model.toClientResponse
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import repository.ClientRepository
 import repository.PointRepository
-import kotlin.time.Clock
 
 class ClientService(
     private val clientRepository: ClientRepository,
@@ -196,7 +195,6 @@ class ClientService(
                 client.address = address
                 latitude?.let { client.latitude = it }
                 longitude?.let { client.longitude = it }
-                client.updatedAt = Clock.System.now()
 
                 val totalPoints = pointRepository.getClientTotalPoints(client.id.value)
 

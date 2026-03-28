@@ -84,7 +84,6 @@ fun Application.configureRequestValidation() {
             when {
                 request.nfc.isBlank() -> ValidationResult.Invalid("NFC cannot be blank")
                 request.name.isBlank() -> ValidationResult.Invalid("Name cannot be blank")
-                request.address.isBlank() -> ValidationResult.Invalid("Address cannot be blank")
                 else -> ValidationResult.Valid
             }
         }
