@@ -115,7 +115,7 @@ fun Route.adminResources() {
     authenticate(JwtAuth.ADMIN) {
         // Client management
         get<AdminResource.Clients> { resource ->
-        if
+
             val (code, response) = clientService.getPaginated(
                 page = resource.page,
                 pageSize = resource.pageSize
