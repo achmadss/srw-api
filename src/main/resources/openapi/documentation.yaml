@@ -1120,6 +1120,44 @@ paths:
                 $ref: '#/components/schemas/BaseResponse'
       security:
         - bearerAuth: []
+  /clients/profile/address:
+    post:
+      tags:
+        - client
+      summary: Set client address
+      description: Set or update the authenticated client's address and location. Use this for first-time address setup on mobile app.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetAddressRequest'
+      responses:
+        '200':
+          description: Address set successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BaseResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ClientResponse'
+        '400':
+          description: Bad request - address cannot be blank
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+      security:
+        - bearerAuth: []
   /clients/profile/points:
     get:
       tags:
@@ -1686,7 +1724,6 @@ components:
       required:
         - nfc
         - name
-        - address
       properties:
         nfc:
           type: string
@@ -1694,6 +1731,15 @@ components:
           type: string
         address:
           type: string
+          nullable: true
+        latitude:
+          type: number
+          format: double
+          nullable: true
+        longitude:
+          type: number
+          format: double
+          nullable: true
     UpdateClientRequest:
       type: object
       properties:
@@ -1703,20 +1749,53 @@ components:
           type: string
         address:
           type: string
+          nullable: true
+        latitude:
+          type: number
+          format: double
+          nullable: true
+        longitude:
+          type: number
+          format: double
+          nullable: true
+    SetAddressRequest:
+      type: object
+      required:
+        - address
+      properties:
+        address:
+          type: string
+        latitude:
+          type: number
+          format: double
+          nullable: true
+        longitude:
+          type: number
+          format: double
+          nullable: true
     ClientResponse:
       type: object
       required:
+        - id
         - nfc
         - name
-        - address
         - totalPoints
       properties:
+        id:
+          type: integer
         nfc:
           type: string
         name:
           type: string
         address:
           type: string
+          nullable: true
+        latitude:
+          type: float
+          nullable: true
+        longitude:
+          type: float
+          nullable: true
         totalPoints:
           type: integer
           default: 0

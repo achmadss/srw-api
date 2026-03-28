@@ -8,10 +8,9 @@ import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
 class ClientRepository {
-    fun create(name: String, nfc: String, address: String): Client {
+    fun create(name: String, nfc: String, address: String?, latitude: Float?, longitude: Float?): Client {
         require(name.isNotBlank()) { "Name cannot be blank" }
         require(nfc.isNotBlank()) { "NFC cannot be blank" }
-        require(address.isNotBlank()) { "Address cannot be blank" }
 
         val existingClient = Client.find { ClientTable.nfc eq nfc }.firstOrNull()
         require(existingClient == null) { "Client with NFC '$nfc' already exists" }
@@ -21,6 +20,8 @@ class ClientRepository {
             this.name = name
             this.nfc = nfc
             this.address = address
+            this.latitude = latitude
+            this.longitude = longitude
             this.createdAt = now
             this.updatedAt = now
         }
@@ -50,7 +51,7 @@ class ClientRepository {
         return Client.all().toList()
     }
 
-    fun update(id: Int, name: String?, nfc: String?, address: String?): Client {
+    fun update(id: Int, name: String?, nfc: String?, address: String?, latitude: Float?, longitude: Float?): Client {
         val client = Client.findById(id) ?: throw IllegalArgumentException("Client with id $id not found")
 
         name?.let {
@@ -68,8 +69,15 @@ class ClientRepository {
         }
 
         address?.let {
-            require(it.isNotBlank()) { "Address cannot be blank" }
             client.address = it
+        }
+
+        latitude?.let {
+            client.latitude = it
+        }
+
+        longitude?.let {
+            client.longitude = it
         }
 
         client.updatedAt = Clock.System.now()

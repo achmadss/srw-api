@@ -13,7 +13,9 @@ import kotlin.time.ExperimentalTime
 object ClientTable : IntIdTable("clients") {
     val name = text("name")
     val nfc = text("nfc")
-    val address = text("address")
+    val address = text("address").nullable()
+    val latitude = float("latitude").nullable()
+    val longitude = float("longitude").nullable()
     val createdAt = timestamp("created_at")
     val updatedAt = timestamp("updated_at")
 }
@@ -24,6 +26,8 @@ class Client(id: EntityID<Int>): IntEntity(id) {
     var name by ClientTable.name
     var nfc by ClientTable.nfc
     var address by ClientTable.address
+    var latitude by ClientTable.latitude
+    var longitude by ClientTable.longitude
     var createdAt by ClientTable.createdAt
     var updatedAt by ClientTable.updatedAt
 
@@ -43,6 +47,8 @@ fun Client.toClientResponse(totalPoints: Int): ClientResponse {
             nfc = this@toClientResponse.nfc,
             name = this@toClientResponse.name,
             address = this@toClientResponse.address,
+            latitude = this@toClientResponse.latitude,
+            longitude = this@toClientResponse.longitude,
             totalPoints = totalPoints
         )
     }

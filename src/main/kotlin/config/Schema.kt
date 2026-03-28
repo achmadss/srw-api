@@ -45,4 +45,31 @@ private fun runMigrations() {
         // Table or column might not exist yet, ignore
         println("Migration: No migration needed or table doesn't exist yet")
     }
+
+    // Migration: Add latitude and longitude columns to clients table
+    try {
+        transaction {
+            val connection = this.connection.connection as java.sql.Connection
+            val statement = connection.createStatement()
+            statement.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS latitude FLOAT")
+            statement.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS longitude FLOAT")
+            statement.close()
+        }
+        println("Migration: Added latitude and longitude columns to 'clients' table")
+    } catch (e: Exception) {
+        println("Migration: Could not add latitude/longitude columns - may already exist")
+    }
+
+    // Migration: Make address column nullable in clients table
+    try {
+        transaction {
+            val connection = this.connection.connection as java.sql.Connection
+            val statement = connection.createStatement()
+            statement.execute("ALTER TABLE clients ALTER COLUMN address DROP NOT NULL")
+            statement.close()
+        }
+        println("Migration: Made 'address' column nullable in 'clients' table")
+    } catch (e: Exception) {
+        println("Migration: Could not make address nullable - may already be nullable or column doesn't exist")
+    }
 }
