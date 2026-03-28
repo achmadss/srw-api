@@ -20,6 +20,7 @@ import repository.PointRepository
 import repository.SubmissionHistoryRepository
 import repository.SubmissionRepository
 import repository.TrashRepository
+import repository.ClientRepository
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
@@ -31,6 +32,7 @@ class SubmissionService(
     private val metadataRepository: MetadataRepository,
     private val trashRepository: TrashRepository,
     private val pointRepository: PointRepository,
+    private val clientRepository: ClientRepository,
     private val imageService: ImageService,
     private val rabbitMQClient: util.RabbitMQClient
 ) {
@@ -57,7 +59,7 @@ class SubmissionService(
 
             try {
                 // Get client's stored address for submission location
-                val client = repository.Client.findById(clientId)
+                val client = clientRepository.findById(clientId)
                     ?: return@transaction HttpStatusCode.NotFound to BaseResponse(
                         success = false,
                         code = HttpStatusCode.NotFound.value,
@@ -413,7 +415,7 @@ class SubmissionService(
                     newStatus = SubmissionStatus.ASSIGNED,
                     changedBy = adminId,
                     userType = UserType.ADMIN.value,
-                    comment = "Agent assigned: $agentId, pickup location: $pickupLocation"
+                    comment = "Agent assigned: $agentId"
                 )
 
                 val updatedSubmission = submissionRepository.findById(id)?.toSubmissionDetailResponse { imageId -> imageService.getImageUrl(imageId) }!!

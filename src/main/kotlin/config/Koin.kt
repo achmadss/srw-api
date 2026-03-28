@@ -92,6 +92,7 @@ fun Application.configureKoin() {
                         metadataRepository = get(),
                         trashRepository = get(),
                         pointRepository = get(),
+                        clientRepository = get(),
                         imageService = get(),
                         rabbitMQClient = get()
                     )
