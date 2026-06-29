@@ -12,7 +12,7 @@ import kotlin.time.ExperimentalTime
 object PointTable : IntIdTable("points") {
     val client = reference("client_id", ClientTable)
     val submission = reference("submission_id", SubmissionTable, onDelete = ReferenceOption.SET_NULL).nullable() // null for manual adjustments
-    val amount = integer("amount") // + for add, - for deduction
+    val amount = text("amount") // encrypted ciphertext for add (+), deduction (-)
     val createdAt = timestamp("created_at")
 }
 

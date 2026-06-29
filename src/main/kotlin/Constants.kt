@@ -34,6 +34,9 @@ object Env {
     const val TRASH_TYPES_CONFIG_PATH = "TRASH_TYPES_CONFIG_PATH"
     const val DEFAULT_TRASH_POINTS_PER_UNIT = "DEFAULT_TRASH_POINTS_PER_UNIT"
 
+    // AES Encryption
+    const val FIELD_ENCRYPTION_KEY = "FIELD_ENCRYPTION_KEY"
+
     // API Logging Configuration
     const val API_LOG_LEVEL = "API_LOG_LEVEL"
     const val API_LOG_REQUEST_BODY = "API_LOG_REQUEST_BODY"
@@ -86,7 +89,8 @@ fun validateEnvironmentVariables() {
         Env.MINIO_ACCESS_KEY,
         Env.MINIO_SECRET_KEY,
         Env.MINIO_BUCKET,
-        Env.RABBITMQ_URL
+        Env.RABBITMQ_URL,
+        Env.FIELD_ENCRYPTION_KEY
     )
 
     val missing = mutableListOf<String>()

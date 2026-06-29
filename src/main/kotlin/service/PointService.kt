@@ -30,7 +30,7 @@ class PointService(
                 val responses = points.map { point ->
                     PointResponse(
                         id = point.id.value,
-                        amount = point.amount,
+                        amount = pointRepository.run { point.decryptedAmount() },
                         createdAt = point.createdAt,
                         submissionId = point.submission?.id?.value
                     )
@@ -78,7 +78,7 @@ class PointService(
                 val point = pointRepository.create(clientId, -amount, null)
                 val response = PointResponse(
                     id = point.id.value,
-                    amount = point.amount,
+                    amount = pointRepository.run { point.decryptedAmount() },
                     createdAt = point.createdAt,
                     submissionId = point.submission?.id?.value
                 )

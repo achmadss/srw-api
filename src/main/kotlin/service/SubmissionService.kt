@@ -11,6 +11,7 @@ import model.response.SubmissionHistoryResponse
 import model.response.base.BaseResponse
 import model.response.base.PaginatedResponse
 import model.toMLStatusResponse
+import model.toAgentSubmissionDetailResponse
 import model.toSubmissionDetailResponse
 import model.toSubmissionHistoryResponse
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -267,7 +268,7 @@ class SubmissionService(
                     success = true,
                     code = HttpStatusCode.OK.value,
                     data = PaginatedResponse(
-                        data = submissions.map { it.toSubmissionDetailResponse { imageId -> imageService.getImageUrl(imageId) } },
+                        data = submissions.map { it.toAgentSubmissionDetailResponse { imageId -> imageService.getImageUrl(imageId) } },
                         page = validPage,
                         pageSize = validPageSize,
                         total = total,
@@ -279,6 +280,40 @@ class SubmissionService(
                     success = false,
                     code = HttpStatusCode.BadRequest.value,
                     message = e.message ?: "Failed to get submissions",
+                    data = null
+                )
+            }
+        }
+    }
+
+    /**
+     * Get single submission for agent (no point info exposed)
+     */
+    fun getByAgentId(
+        id: Int,
+        agentId: Int
+    ): Pair<HttpStatusCode, BaseResponse<SubmissionDetailResponse?>> {
+        return transaction {
+            val submission = submissionRepository.findById(id)
+            if (submission != null) {
+                if (submission.agent?.id?.value != agentId) {
+                    return@transaction HttpStatusCode.Forbidden to BaseResponse(
+                        success = false,
+                        code = HttpStatusCode.Forbidden.value,
+                        message = "Access denied: submission not assigned to you",
+                        data = null
+                    )
+                }
+                HttpStatusCode.OK to BaseResponse(
+                    success = true,
+                    code = HttpStatusCode.OK.value,
+                    data = submission.toAgentSubmissionDetailResponse { imageId -> imageService.getImageUrl(imageId) }
+                )
+            } else {
+                HttpStatusCode.NotFound to BaseResponse(
+                    success = false,
+                    code = HttpStatusCode.NotFound.value,
+                    message = "Submission with id $id not found",
                     data = null
                 )
             }
@@ -510,7 +545,7 @@ class SubmissionService(
                     amount = submission.calculateTotalPoints()
                 )
 
-                val updatedSubmission = submissionRepository.findById(id)?.toSubmissionDetailResponse { imageId -> imageService.getImageUrl(imageId) }!!
+                val updatedSubmission = submissionRepository.findById(id)?.toAgentSubmissionDetailResponse { imageId -> imageService.getImageUrl(imageId) }!!
                 HttpStatusCode.OK to BaseResponse(
                     success = true,
                     code = HttpStatusCode.OK.value,

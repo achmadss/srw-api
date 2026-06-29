@@ -8,7 +8,9 @@ import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 import repository.*
 import service.*
+import util.AesUtil
 import util.RabbitMQClient
+import javax.crypto.SecretKey
 
 fun Application.configureKoin() {
     install(Koin) {
@@ -22,6 +24,11 @@ fun Application.configureKoin() {
                         password = getRequiredEnv(Env.DB_PASSWORD),
                     )
                 }
+                // AES Encryption Key
+                single<SecretKey> {
+                    AesUtil.keyFromEnv(getRequiredEnv(Env.FIELD_ENCRYPTION_KEY))
+                }
+
                 // Repositories
                 single<RefreshTokenRepository> { RefreshTokenRepository() }
                 single<AdminRepository> { AdminRepository() }
@@ -32,7 +39,7 @@ fun Application.configureKoin() {
                 single<SubmissionHistoryRepository> { SubmissionHistoryRepository() }
                 single<ImageRepository> { ImageRepository() }
                 single<MetadataRepository> { MetadataRepository() }
-                single<PointRepository> { PointRepository() }
+                single<PointRepository> { PointRepository(get()) }
 
                 // Storage
                 single<MinIOStorageService>(createdAtStart = true) {

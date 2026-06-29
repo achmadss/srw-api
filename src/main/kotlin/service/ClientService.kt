@@ -71,8 +71,7 @@ class ClientService(
                 data = PaginatedResponse(
                     data = paginated.map { client ->
                         // Calculate total points for each client
-                        val totalPoints = pointRepository.findByClient(client.id.value)
-                            .sumOf { it.amount }
+                        val totalPoints = pointRepository.getClientTotalPoints(client.id.value)
 
                         client.toClientResponse(totalPoints)
                     },

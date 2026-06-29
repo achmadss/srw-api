@@ -6,11 +6,21 @@ import model.PointTable
 import model.Submission
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.eq
+import util.AesUtil
+import javax.crypto.SecretKey
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
-class PointRepository {
+class PointRepository(
+    private val aesKey: SecretKey
+) {
+    private fun Int.encrypt(): String = AesUtil.encryptInt(this, aesKey)
+
+    private fun String.decryptAmount(): Int = AesUtil.decryptInt(this, aesKey)
+
+    fun Point.decryptedAmount(): Int = this.amount.decryptAmount()
+
     fun create(clientId: Int, amount: Int, submissionId: Int?): Point {
         val client = Client.findById(clientId) ?: throw IllegalArgumentException("Client with id $clientId not found")
 
@@ -22,7 +32,7 @@ class PointRepository {
         return Point.new {
             this.client = client
             this.submission = submission
-            this.amount = amount
+            this.amount = amount.encrypt()
             this.createdAt = now
         }
     }
@@ -42,7 +52,7 @@ class PointRepository {
 
     fun getClientTotalPoints(clientId: Int): Int {
         val client = Client.findById(clientId) ?: throw IllegalArgumentException("Client with id $clientId not found")
-        return client.points.sumOf { it.amount }
+        return client.points.sumOf { it.amount.decryptAmount() }
     }
 
     fun findByClientPaginated(clientId: Int, page: Int, pageSize: Int): List<Point> {

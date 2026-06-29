@@ -112,6 +112,52 @@ fun Submission.toSubmissionDetailResponse(imageUrlProvider: ((String) -> String)
 }
 
 /**
+ * Extension function for agent responses — point info is NOT exposed.
+ */
+@OptIn(ExperimentalTime::class)
+fun Submission.toAgentSubmissionDetailResponse(imageUrlProvider: ((String) -> String)? = null): SubmissionDetailResponse {
+    return transaction {
+        SubmissionDetailResponse(
+            id = this@toAgentSubmissionDetailResponse.id.value,
+            clientId = this@toAgentSubmissionDetailResponse.client.id.value,
+            clientName = this@toAgentSubmissionDetailResponse.client.name,
+            clientNfc = this@toAgentSubmissionDetailResponse.client.nfc,
+            agentId = this@toAgentSubmissionDetailResponse.agent?.id?.value,
+            agentName = this@toAgentSubmissionDetailResponse.agent?.name,
+            status = this@toAgentSubmissionDetailResponse.getStatus(),
+            rejectionReason = this@toAgentSubmissionDetailResponse.rejectionReason,
+            adminNotes = this@toAgentSubmissionDetailResponse.adminNotes,
+            pickupLocation = this@toAgentSubmissionDetailResponse.submissionAddress,
+            submissionAddress = this@toAgentSubmissionDetailResponse.submissionAddress,
+            submissionLatitude = this@toAgentSubmissionDetailResponse.submissionLatitude,
+            submissionLongitude = this@toAgentSubmissionDetailResponse.submissionLongitude,
+            totalPoints = null,
+            images = this@toAgentSubmissionDetailResponse.images.map { image ->
+                SubmissionImageResponse(
+                    id = image.id.value,
+                    url = imageUrlProvider?.invoke(image.id.value) ?: image.id.value,
+                    metadata = image.metadata.map { metadata ->
+                        ImageMetadataResponse(
+                            id = metadata.id.value,
+                            trashType = metadata.trash.name,
+                            amount = metadata.amount,
+                            points = null
+                        )
+                    },
+                    createdAt = image.createdAt
+                )
+            },
+            createdAt = this@toAgentSubmissionDetailResponse.createdAt,
+            updatedAt = this@toAgentSubmissionDetailResponse.updatedAt,
+            processedAt = this@toAgentSubmissionDetailResponse.processedAt,
+            reviewedAt = this@toAgentSubmissionDetailResponse.reviewedAt,
+            assignedAt = this@toAgentSubmissionDetailResponse.assignedAt,
+            pickedUpAt = this@toAgentSubmissionDetailResponse.pickedUpAt
+        )
+    }
+}
+
+/**
  * Extension function to convert Submission entity to MLStatusResponse within a transaction
  */
 @OptIn(ExperimentalTime::class)

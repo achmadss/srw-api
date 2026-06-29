@@ -52,25 +52,11 @@ fun Route.agentResources() {
             call.respond(code, response)
         }
 
-        // Get specific submission if assigned to agent
+        // Get specific submission if assigned to agent (no point info exposed)
         get<AgentResource.Submissions.ById> { resource ->
             val principal = call.principal<JWTPrincipal>()!!
             val agentId = principal.payload.getClaim("userId").asInt()
-            val (code, response) = submissionService.getById(resource.id)
-            // Check if submission is assigned to this agent
-            if (code == HttpStatusCode.OK) {
-                val submission = response.data
-                if (submission?.agentId != agentId) {
-                    call.respond(
-                        HttpStatusCode.Forbidden, BaseResponse(
-                        success = false,
-                        code = HttpStatusCode.Forbidden.value,
-                        message = "Access denied: submission not assigned to you",
-                        data = null
-                    ))
-                    return@get
-                }
-            }
+            val (code, response) = submissionService.getByAgentId(resource.id, agentId)
             call.respond(code, response)
         }
 

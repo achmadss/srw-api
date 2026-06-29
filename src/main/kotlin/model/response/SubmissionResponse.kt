@@ -79,7 +79,7 @@ data class ImageMetadataResponse(
     val id: Int,
     val trashType: String,
     val amount: Int,
-    val points: Int // amount * pointsPerUnit
+    val points: Int? = null // null for agent responses; calculated as amount * pointsPerUnit for client/admin
 )
 
 /**

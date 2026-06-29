@@ -122,4 +122,17 @@ private fun runMigrations() {
     } catch (e: Exception) {
         println("Migration ERROR: Could not drop pickup_location column - ${e.message}")
     }
+
+    // Migration: Convert points.amount from INTEGER to TEXT for AES encryption
+    try {
+        transaction {
+            val connection = this.connection.connection as java.sql.Connection
+            val statement = connection.createStatement()
+            statement.execute("ALTER TABLE points ALTER COLUMN amount TYPE TEXT USING amount::TEXT")
+            statement.close()
+        }
+        println("Migration: Converted points.amount from INTEGER to TEXT")
+    } catch (e: Exception) {
+        println("Migration: points.amount already TEXT or table doesn't exist — ${e.message}")
+    }
 }
