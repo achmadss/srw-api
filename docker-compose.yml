@@ -135,6 +135,9 @@ services:
       # Trash Types Configuration
       TRASH_TYPES_CONFIG_PATH: /config/trash-types.json
       DEFAULT_TRASH_POINTS_PER_UNIT: ${DEFAULT_TRASH_POINTS_PER_UNIT:-10}
+
+      # AES Encryption Key (Required)
+      FIELD_ENCRYPTION_KEY: ${FIELD_ENCRYPTION_KEY}
     volumes:
       - ./trash-types.json:/config/trash-types.json:ro
     depends_on:

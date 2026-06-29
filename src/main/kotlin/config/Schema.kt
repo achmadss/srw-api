@@ -7,6 +7,8 @@ import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import repository.AdminRepository
 import repository.TrashRepository
+import util.AesUtil
+import javax.crypto.SecretKey
 import java.sql.Statement
 
 fun Application.configureSchema() {
@@ -134,5 +136,42 @@ private fun runMigrations() {
         println("Migration: Converted points.amount from INTEGER to TEXT")
     } catch (e: Exception) {
         println("Migration: points.amount already TEXT or table doesn't exist — ${e.message}")
+    }
+
+    // Migration: Encrypt existing plaintext points.amount values
+    try {
+        val aesKey = inject<SecretKey>()
+        transaction {
+            val connection = this.connection.connection as java.sql.Connection
+            val stmt = connection.prepareStatement("SELECT id, amount FROM points")
+            val rs = stmt.executeQuery()
+
+            val updates = mutableListOf<Pair<Int, String>>()
+            while (rs.next()) {
+                val id = rs.getInt("id")
+                val rawAmount = rs.getString("amount")
+                if (rawAmount.toIntOrNull() != null) {
+                    val encrypted = AesUtil.encryptInt(rawAmount.toInt(), aesKey)
+                    updates.add(id to encrypted)
+                }
+            }
+            rs.close()
+            stmt.close()
+
+            if (updates.isNotEmpty()) {
+                val updateStmt = connection.prepareStatement("UPDATE points SET amount = ? WHERE id = ?")
+                for ((id, encrypted) in updates) {
+                    updateStmt.setString(1, encrypted)
+                    updateStmt.setInt(2, id)
+                    updateStmt.executeUpdate()
+                }
+                updateStmt.close()
+                println("Migration: Encrypted ${updates.size} legacy point rows")
+            } else {
+                println("Migration: No legacy point rows to encrypt")
+            }
+        }
+    } catch (e: Exception) {
+        println("Migration ERROR: Could not encrypt legacy points — ${e.message}")
     }
 }

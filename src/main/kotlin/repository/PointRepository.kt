@@ -17,7 +17,10 @@ class PointRepository(
 ) {
     private fun Int.encrypt(): String = AesUtil.encryptInt(this, aesKey)
 
-    private fun String.decryptAmount(): Int = AesUtil.decryptInt(this, aesKey)
+    private fun String.decryptAmount(): Int {
+        this.toIntOrNull()?.let { return it }
+        return AesUtil.decryptInt(this, aesKey)
+    }
 
     fun Point.decryptedAmount(): Int = this.amount.decryptAmount()
 
